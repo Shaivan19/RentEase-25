@@ -17,12 +17,16 @@ const Login = () => {
       const response = await axios.post("/users/login", data);
       console.log("Response from Backend:", response.data);
   
-      if (response.status === 200) {
+      if (response.status === 200 && response.data?.data?.username) {
         const userData = response.data?.data;
+        localStorage.setItem("user",JSON.stringify({
+          userId: response.data.data.userId,
+    username: response.data.data.username,
+        }))
   
 //Store user details in localStorage
-        localStorage.setItem("userId", userData._id);                 //used to store userid in local storage 
-        localStorage.setItem("userName", userData.firstName);      //used to store username in local storage
+        // localStorage.setItem("userId", userData._id);                 //used to store userid in local storage 
+        // localStorage.setItem("userName", userData.firstName);      //used to store username in local storage
         // localStorage.setItem("userRole", userData.userType);       //used to store usertype in local storage
   
 // Toaster Msg
