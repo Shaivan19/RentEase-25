@@ -12,34 +12,38 @@ const Login = () => {
 
   const onSubmit = async (data) => {
     console.log("Submitting Login Data:", data);
-
+  
     try {
       const response = await axios.post("/users/login", data);
       console.log("Response from Backend:", response.data);
-
+  
       if (response.status === 200) {
-        const userType = response.data?.data?.userType || "User";
-
-
-        toast.success(`Welcome ${userType.charAt(0).toUpperCase() + userType.slice(1)}!`, {
+        const userData = response.data?.data;
+  
+//Store user details in localStorage
+        localStorage.setItem("userId", userData._id);                 //used to store userid in local storage 
+        // localStorage.setItem("userName", userData.firstName);      //used to store username in local storage
+        // localStorage.setItem("userRole", userData.userType);       //used to store usertype in local storage
+  
+// Toaster Msg
+        toast.success(`Welcome ${userData.firstName}!`, {
           position: "top-right",
           autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
           theme: "colored",
         });
-
-        
-
+  
+// Navigate based on user type
         setTimeout(() => {
-          navigate("/home");
+          if (userData.userType === "admin") {
+            navigate("/admin-dashboard");
+          } else {
+            navigate("/home");
+          }
         }, 2000);
       }
     } catch (error) {
       console.error("Login Error:", error);
-
+  
       toast.error(error.response?.data?.message || "Invalid credentials! Please try again.", {
         position: "top-right",
         autoClose: 3000,
@@ -47,6 +51,8 @@ const Login = () => {
       });
     }
   };
+  
+  
 
   const styles = {
     pageWrapper: {

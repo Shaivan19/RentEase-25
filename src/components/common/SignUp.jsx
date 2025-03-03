@@ -135,7 +135,7 @@ const Signup = () => {
 
 const styles = {
   pageWrapper: {
-    position: "fixed", // Ensures it covers the entire viewport
+    position: "fixed",
     top: 0,
     left: 0,
     width: "100vw",
@@ -144,7 +144,7 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
     background: "linear-gradient(to right, #00c6ff, #0072ff)",
-    zIndex: 9999, // Ensures it stays on top
+    zIndex: 9999,
   },
   formContainer: {
     backgroundColor: "white",
