@@ -71,15 +71,15 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    background: "linear-gradient(to right, #00c6ff, #0072ff)",
+    background: "#F3F4F6",
     padding: " 20px",
     flexDirection:"column",
     boxSizing:"border-box",
 
   },
   container: {
-    width: "90%", // Take up most of the screen width
-    maxWidth: "600px", // Optional max width
+    width: "90%",
+    maxWidth: "600px",
     backgroundColor: "white",
     padding: "20px",
     borderRadius: "12px",
@@ -132,9 +132,9 @@ const styles = {
   },
   grid: {
     display: "flex",
-    flexDirection: "column", // Make cards display in a single column
+    flexDirection: "column",
     gap: "15px",
-    width: "100%", // Ensure it fills container width
+    width: "100%",
   },
 };
 

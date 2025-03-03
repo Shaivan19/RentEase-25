@@ -22,7 +22,7 @@ const Login = () => {
   
 //Store user details in localStorage
         localStorage.setItem("userId", userData._id);                 //used to store userid in local storage 
-        // localStorage.setItem("userName", userData.firstName);      //used to store username in local storage
+        localStorage.setItem("userName", userData.firstName);      //used to store username in local storage
         // localStorage.setItem("userRole", userData.userType);       //used to store usertype in local storage
   
 // Toaster Msg
@@ -34,11 +34,7 @@ const Login = () => {
   
 // Navigate based on user type
         setTimeout(() => {
-          if (userData.userType === "admin") {
-            navigate("/admin-dashboard");
-          } else {
             navigate("/home");
-          }
         }, 2000);
       }
     } catch (error) {
@@ -60,7 +56,7 @@ const Login = () => {
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      background: "linear-gradient(to right, #00c6ff, #0072ff)",
+      background: "#F3F4F6",
       top: "0",
       left: "0",
       width:"100vw",
