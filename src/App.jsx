@@ -27,7 +27,7 @@ function App() {
         {showNavbar && <Navbar/>}
         <Routes>
           <Route path='/login' element={<Login/>}></Route>
-          <Route path='/signup2' element={<Sample/>}></Route>
+          <Route path='/sample' element={<Sample/>}></Route>
           <Route path='/signup' element={<Signup/>}></Route>
           <Route path='/home' element={<Home/>}></Route>
           <Route path='/user' element={<UserSidebar/>}>

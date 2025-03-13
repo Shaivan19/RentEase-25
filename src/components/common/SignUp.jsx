@@ -1,111 +1,186 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { toast } from "react-toastify";
+import axios from "axios"; 
 
-const Navbar = () => {
+const Signup = () => {
+  const { register, handleSubmit, watch, formState: { errors } } = useForm();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [user, setUser] = useState(null); 
+  const password = watch("password", "");
+  const [userType, setUserType] = useState("tenant");
 
-  // Show navbar only on Home, Login, Signup pages
-  const allowedPages = ["/home", "/login", "/signup"];
-  if (!allowedPages.includes(location.pathname)) return null;
-
-  // Load user info on mount & listen for changes in localStorage
-  useEffect(() => {
-    const loadUser = () => {
-      const storedUser = JSON.parse(localStorage.getItem("user"));
-      setUser(storedUser);
+  const onSubmit = async (data) => {
+    const userData = {
+      username: data.username,
+      userType: userType.toLowerCase(), // Ensuring it's in lowercase
+      email: data.email,
+      password: data.password
     };
 
-    loadUser();
-    window.addEventListener("storage", loadUser); // Listen for storage changes
-    return () => window.removeEventListener("storage", loadUser);
-  }, []);
+    try {
+      const response = await axios.post("/users/signup", userData);
 
-  // Handle Logout
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    setUser(null); // Clear user state
-    toast.success("Logged out successfully!", { position: "top-right", autoClose: 2000 });
-    navigate("/home");
+      if (response.status === 201) {
+        alert("Signup Successful! Redirecting to Login...");
+        navigate("/login");
+      } else {
+        alert(response.data.message || "Signup failed");
+      }
+    } catch (error) {
+      console.error("🔥 Signup Error:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Error during signup. Please try again.");
+    }
   };
 
   return (
-    <nav style={styles.navbar}>
-      <div style={styles.logo}>
-        <Link to="/home" style={styles.navLink}>RentEase</Link>
-      </div>
+    <div style={styles.pageWrapper}>
+      <motion.form
+        onSubmit={handleSubmit(onSubmit)}
+        style={styles.formContainer}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <h2 style={styles.heading}>Create Your Account</h2>
 
-      {/* Aligns Home, Properties, Contact to the right */}
-      <ul style={styles.navLinks}>
-        <li><Link to="/home" style={styles.navLink}>Home</Link></li>
-        <li><Link to="/properties" style={styles.navLink}>Properties</Link></li>
-        <li><Link to="/contact" style={styles.navLink}>Contact</Link></li>
-      </ul>
+        {/* User Type Selection */}
+        <div style={styles.radioContainer}>
+          <label>
+            <input
+              type="radio"
+              value="tenant"
+              checked={userType === "tenant"}
+              onChange={() => setUserType("tenant")}
+            />
+            Tenant
+          </label>
+          <label>
+            <input
+              type="radio"
+              value="landlord"
+              checked={userType === "landlord"}
+              onChange={() => setUserType("landlord")}
+            />
+            Landlord
+          </label>
+        </div>
 
-      <div style={styles.userSection}>
-        {user ? (
-          <>
-            <motion.span
-              style={styles.userName}
-              onClick={() => navigate("/profile")}
-              whileHover={{ scale: 1.1 }}
-            >
-              {user.username} ⬇
-            </motion.span>
-            <motion.button 
-              onClick={handleLogout} 
-              style={styles.logoutButton}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Logout
-            </motion.button>
-          </>
-        ) : (
-          <motion.button
-            onClick={() => navigate("/login")}
-            style={styles.loginButton}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Login
-          </motion.button>
-        )}
-      </div>
-    </nav>
+        {/* Username */}
+        <motion.input
+          placeholder="Enter Username"
+          type="text"
+          style={styles.input}
+          {...register("username", { required: "Username is required" })}
+          whileFocus={{ scale: 1.05 }}
+        />
+        {errors.username && <p style={styles.errorText}>{errors.username.message}</p>}
+
+        {/* Email */}
+        <motion.input
+          placeholder="Enter Email"
+          type="email"
+          style={styles.input}
+          {...register("email", {
+            required: "Email is required",
+            pattern: { value: /^\S+@\S+$/i, message: "Invalid email address" },
+          })}
+          whileFocus={{ scale: 1.05 }}
+        />
+        {errors.email && <p style={styles.errorText}>{errors.email.message}</p>}
+
+        {/* Password */}
+        <motion.input
+          placeholder="Create Password"
+          type="password"
+          style={styles.input}
+          {...register("password", { required: "Password is required" })}
+          whileFocus={{ scale: 1.05 }}
+        />
+        {errors.password && <p style={styles.errorText}>{errors.password.message}</p>}
+
+        {/* Confirm Password */}
+        <motion.input
+          placeholder="Re-enter Password"
+          type="password"
+          style={styles.input}
+          {...register("confirmPassword", {
+            required: "Please confirm your password",
+            validate: (value) => value === password || "Passwords do not match",
+          })}
+          whileFocus={{ scale: 1.05 }}
+        />
+        {errors.confirmPassword && <p style={styles.errorText}>{errors.confirmPassword.message}</p>}
+
+        <motion.button
+          type="submit"
+          style={styles.button}
+          whileHover={{ scale: 1.05 }}
+        >
+          Sign Up
+        </motion.button>
+      </motion.form>
+    </div>
   );
 };
 
-// Styles
 const styles = {
-  navbar: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "15px 30px",
-    background: "#0072ff",
-    color: "white",
+  pageWrapper: {
     position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100vw",
+    height: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    background: "#F3F4F6",
+    zIndex: 9999,
+  },
+  formContainer: {
+    backgroundColor: "white",
+    padding: "30px",
+    borderRadius: "12px",
+    boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.3)",
+    width: "90%",
+    maxWidth: "500px",
+    textAlign: "center",
+  },
+  heading: {
+    fontSize: "26px",
+    fontWeight: "bold",
+    marginBottom: "20px",
+    color: "#333",
+  },
+  input: {
     width: "100%",
-    top: "0",
-    left: "0",
-    zIndex: "1000",
+    padding: "12px",
+    margin: "10px 0",
+    border: "1px solid #ccc",
+    borderRadius: "8px",
+    fontSize: "16px",
   },
-  logo: { fontSize: "22px", fontWeight: "bold" },
-  navLinks: { 
-    listStyle: "none", 
-    display: "flex", 
-    gap: "20px", 
-    marginLeft: "auto" 
+  button: {
+    width: "100%",
+    backgroundColor: "#0072ff",
+    color: "white",
+    padding: "12px",
+    borderRadius: "8px",
+    fontSize: "18px",
+    cursor: "pointer",
+    border: "none",
+    transition: "background-color 0.3s",
   },
-  navLink: { textDecoration: "none", color: "white", fontSize: "16px", fontWeight: "500" },
-  userSection: { display: "flex", alignItems: "center", gap: "10px", marginLeft: "20px" },
-  userName: { fontWeight: "bold", cursor: "pointer", color: "#fff", textDecoration: "underline" },
-  loginButton: { backgroundColor: "#ff6f00", color: "white", padding: "8px 15px", borderRadius: "6px", border: "none", cursor: "pointer", fontSize: "16px" },
-  logoutButton: { backgroundColor: "#ff0000", color: "white", padding: "8px 15px", borderRadius: "6px", border: "none", cursor: "pointer", fontSize: "16px" },
+  radioContainer: {
+    display: "flex",
+    justifyContent: "space-around",
+    marginBottom: "12px",
+  },
+  errorText: {
+    color: "red",
+    fontSize: "14px",
+    marginTop: "5px",
+  },
 };
 
-export default Navbar;
+export default Signup;
