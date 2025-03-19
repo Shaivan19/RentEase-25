@@ -202,7 +202,7 @@ const Navbar = () => {
   const menuItems = [
     { text: "Home", icon: <HomeIcon />, path: "/home" },
     { text: "Properties", icon: <BusinessIcon />, path: "/properties" },
-    { text: "Contact", icon: <ContactMailIcon />, path: "/contact" },
+    { text: "Contact", icon: <ContactMailIcon />, path: "/contactus" },
   ];
 
   return (
