@@ -65,6 +65,7 @@ const Login = () => {
         backgroundSize: "cover",
         backgroundPosition: "center",
         width: "100vw",
+        paddingTop: "80px",
       }}
     >
       <ToastContainer />
