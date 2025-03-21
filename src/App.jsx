@@ -15,6 +15,7 @@ import Navbar from './components/layouts/Navbar'
 import TenantDashboard from './components/tenant/TenantDashboard'
 import ContactUs from './components/common/ContactUs'
 import LandingPage from './components/common/LandingPage'
+import LandlordDashboard from './components/layouts/landlord/LandlordDashboard'
 
 
 function App() {
@@ -30,9 +31,10 @@ function App() {
 
         {showNavbar && <Navbar/>}
         <Routes>
-          <Route path='/' element={<LandingPage/>}></Route>
+          <Route path='/' element={<LandingPage/  >}></Route>
           <Route path='/login' element={<Login/>}></Route>
           <Route path='/tenant/dashboard' element={<TenantDashboard/>}></Route>
+          <Route path='/landlord/dashboard' element={<LandlordDashboard/>}></Route>
           <Route path='/sample' element={<Sample/>}></Route>
           <Route path='/signup' element={<Signup/>}></Route>
           <Route path='/home' element={<Home/>}></Route>

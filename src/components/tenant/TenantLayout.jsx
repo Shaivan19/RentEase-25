@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Box } from "@mui/material";
-import TenantNavbar from "../tenant/TenantNavbar";
-import TenantSidebar from "../tenant/TenantSidebar";
+import TenantNavbar from "./TenantNavbar";
+import TenantSidebar from "./TenantSidebar";
 
 const TenantLayout = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);

@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Typography, Button, Container, Grid } from "@mui/material";
 import { styled } from "@mui/system";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../layouts/Navbar";
 
 const Background = styled(Box)(({ theme }) => ({
@@ -27,6 +28,8 @@ const Section = styled(Box)(({ theme }) => ({
 }));
 
 const LandingPage = () => {
+  const navigate = useNavigate();
+
   return (
     <>
       <Navbar /> {/* Your Navbar is now included at the top */}
@@ -56,6 +59,7 @@ const LandingPage = () => {
             color="primary"
             size="large"
             sx={{ mt: 3 }}
+            onClick={() => navigate("/signup")}
           >
             Get Started
           </Button>
@@ -124,7 +128,7 @@ const LandingPage = () => {
             Have questions? Contact us and we’ll be happy to assist!
           </Typography>
           <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-            <Button variant="contained" color="primary">
+            <Button variant="contained" color="primary" onClick={() => navigate("/contactus")}> 
               Contact Us
             </Button>
           </Box>

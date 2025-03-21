@@ -166,11 +166,12 @@ const styles = {
     backgroundPosition: "center",
   },
   formContainer: {
-    padding: "30px",
+    padding: "20px",
     borderRadius: "12px",
     boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.3)",
     width: "90%",
     maxWidth: "450px",
+    minHeight:"fit-content",
     textAlign: "center",
     backgroundColor: "rgba(255, 255, 255, 0.9)", // Slight transparency for better contrast
   },
