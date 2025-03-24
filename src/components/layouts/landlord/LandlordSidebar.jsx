@@ -1,39 +1,54 @@
-import React from "react";
-import { Drawer, List, ListItem, ListItemIcon, ListItemText } from "@mui/material";
-import { Home, Business, MonetizationOn, Person, ExitToApp } from "@mui/icons-material";
+import React, { useState } from "react";
+import { Drawer, List, ListItemButton, ListItemIcon, ListItemText, IconButton, Collapse } from "@mui/material";
+import { Home, Business, MonetizationOn, Person, ExitToApp, Menu, ExpandLess, ExpandMore } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 
-const LandlordSidebar = () => {
+const LandlordSidebar = ({ isOpen, toggleSidebar }) => {
+  const [openProperties, setOpenProperties] = useState(false);
+
   return (
-    <Drawer variant="permanent" sx={{ width: 240, flexShrink: 0 }}>
+    <Drawer variant="persistent" open={isOpen} onClose={toggleSidebar} sx={{ "& .MuiDrawer-paper": { width: 250, backgroundColor: "#1e1e2d", color: "white" } }}>
+      <IconButton onClick={toggleSidebar} sx={{ color: "white", margin: 1 }}>
+        <Menu />
+      </IconButton>
       <List>
-        <ListItem button component={Link} to="/landlord/dashboard">
-          <ListItemIcon><Home /></ListItemIcon>
+        <ListItemButton component={Link} to="/landlord/dashboard">
+          <ListItemIcon sx={{ color: "white" }}><Home /></ListItemIcon>
           <ListItemText primary="Dashboard" />
-        </ListItem>
-        
-        <ListItem button component={Link} to="/landlord/properties">
-          <ListItemIcon><Business /></ListItemIcon>
+        </ListItemButton>
+
+        <ListItemButton onClick={() => setOpenProperties(!openProperties)}>
+          <ListItemIcon sx={{ color: "white" }}><Business /></ListItemIcon>
           <ListItemText primary="My Properties" />
-        </ListItem>
-        
-        <ListItem button component={Link} to="/landlord/earnings">
-          <ListItemIcon><MonetizationOn /></ListItemIcon>
+          {openProperties ? <ExpandLess /> : <ExpandMore />}
+        </ListItemButton>
+        <Collapse in={openProperties} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            <ListItemButton sx={{ pl: 4 }} component={Link} to="/landlord/properties">
+              <ListItemText primary="View Properties" />
+            </ListItemButton>
+            <ListItemButton sx={{ pl: 4 }} component={Link} to="/landlord/addnewproperty">
+              <ListItemText primary="Add Property" />
+            </ListItemButton>
+          </List>
+        </Collapse>
+
+        <ListItemButton component={Link} to="/landlord/earnings">
+          <ListItemIcon sx={{ color: "white" }}><MonetizationOn /></ListItemIcon>
           <ListItemText primary="Earnings" />
-        </ListItem>
-        
-        <ListItem button component={Link} to="/landlord/profile">
-          <ListItemIcon><Person /></ListItemIcon>
+        </ListItemButton>
+
+        <ListItemButton component={Link} to="/landlord/profile">
+          <ListItemIcon sx={{ color: "white" }}><Person /></ListItemIcon>
           <ListItemText primary="Profile" />
-        </ListItem>
-        
-        <ListItem button component={Link} to="/logout">
-          <ListItemIcon><ExitToApp /></ListItemIcon>
+        </ListItemButton>
+
+        <ListItemButton component={Link} to="/logout" sx={{ color: "red" }}>
+          <ListItemIcon sx={{ color: "red" }}><ExitToApp /></ListItemIcon>
           <ListItemText primary="Logout" />
-        </ListItem>
+        </ListItemButton>
       </List>
     </Drawer>
   );
 };
-
 export default LandlordSidebar;

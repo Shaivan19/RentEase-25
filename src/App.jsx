@@ -16,6 +16,9 @@ import TenantDashboard from './components/tenant/TenantDashboard'
 import ContactUs from './components/common/ContactUs'
 import LandingPage from './components/common/LandingPage'
 import LandlordDashboard from './components/layouts/landlord/LandlordDashboard'
+import MyProperties from './components/layouts/landlord/MyProperties'
+import LandlordLayout from './components/layouts/landlord/LandlordLayout'
+import AddProperty from './components/layouts/landlord/AddProperty'
 
 
 function App() {
@@ -34,7 +37,11 @@ function App() {
           <Route path='/' element={<LandingPage/  >}></Route>
           <Route path='/login' element={<Login/>}></Route>
           <Route path='/tenant/dashboard' element={<TenantDashboard/>}></Route>
-          <Route path='/landlord/dashboard' element={<LandlordDashboard/>}></Route>
+          <Route path="/landlord/*" element={<LandlordLayout/>}>
+            <Route path='dashboard' element={<LandlordDashboard/>}></Route>
+            <Route path='properties' element={<MyProperties/>}></Route>
+            <Route path='addnewproperty' element={<AddProperty/>}></Route>
+          </Route>
           <Route path='/sample' element={<Sample/>}></Route>
           <Route path='/signup' element={<Signup/>}></Route>
           <Route path='/home' element={<Home/>}></Route>
