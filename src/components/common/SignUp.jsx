@@ -132,7 +132,7 @@ const Signup = () => {
           </motion.div>
 
           {/* Divider */}
-          <Divider sx={{ my: 2 }}>OR</Divider>
+          <Divider sx={{ my: 1 }}>OR</Divider>
 
           {/* Google Signup */}
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -147,6 +147,9 @@ const Signup = () => {
               Sign Up with Google
             </Button>
           </motion.div>
+          <Typography variant="body2" sx={{ mt: 2 }}>Already have an account? <span style={{ color: "#1976D2", cursor: "pointer" }} onClick={() => navigate("/login")}>Login</span></Typography>
+
+          <Typography variant="body2" sx={{ mt: 2 }}>By signing up, you agree to our <span style={{ color: "#1976D2", cursor: "pointer" }} onClick={() => navigate("/terms")}>Terms & Conditions</span></Typography>
         </Card>
       </motion.div>
     </Box>
@@ -156,6 +159,9 @@ const Signup = () => {
 // Styles
 const styles = {
   pageWrapper: {
+    position: "fixed",
+    top: 0,
+    left: 0,
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -164,16 +170,22 @@ const styles = {
     backgroundImage: "url('https://github.com/Shaivan19/mybackgrounds/blob/main/webbackground_optimized.png?raw=true')",
     backgroundSize: "cover",
     backgroundPosition: "center",
+    overflow: "hidden",
+    marginTop: "35px",
+    // ["@media (max-width: 600px)"]: {
+    //   marginTop: "60px",
+    // },
   },
   formContainer: {
     padding: "20px",
     borderRadius: "12px",
     boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.3)",
     width: "90%",
-    maxWidth: "450px",
-    minHeight:"fit-content",
+    maxWidth: "380px",
+    maxHeight: "85vh", // Prevent overflowing
+    overflowY: "auto", // Enable scrolling inside card only
     textAlign: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.9)", // Slight transparency for better contrast
+    backgroundColor: "rgba(255, 255, 255, 0.9)", 
   },
   heading: {
     fontSize: "26px",
@@ -182,7 +194,8 @@ const styles = {
     color: "#333",
   },
   button: {
-    marginTop: "15px",
+    marginTop: "10px",
+    padding: "10px",
   },
   googleButton: {
     borderColor: "#DB4437",

@@ -19,6 +19,7 @@ import LandlordDashboard from './components/layouts/landlord/LandlordDashboard'
 import MyProperties from './components/layouts/landlord/MyProperties'
 import LandlordLayout from './components/layouts/landlord/LandlordLayout'
 import AddProperty from './components/layouts/landlord/AddProperty'
+import TermsAndConditions from './components/common/TnC'
 
 
 function App() {
@@ -44,6 +45,7 @@ function App() {
           </Route>
           <Route path='/sample' element={<Sample/>}></Route>
           <Route path='/signup' element={<Signup/>}></Route>
+          <Route path='/terms' element={<TermsAndConditions/>}></Route>
           <Route path='/home' element={<Home/>}></Route>
           <Route path='/contactus' element={<ContactUs/>}></Route>
 
