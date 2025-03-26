@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { UserSidebar } from './components/layouts/UserSidebar'
 // import './App.css'
 import "./assets/css/Adminlte.css"
@@ -10,9 +10,9 @@ import Signup from './components/common/SignUp'
 import { Sample } from './components/common/Sample'
 import axios from 'axios'
 import Home from './components/common/Home'
-import{Route, Routes,useLocation} from 'react-router-dom'
+import { Route, Routes, useLocation, Navigate } from 'react-router-dom'
 import Navbar from './components/layouts/Navbar'
-import TenantDashboard from './components/tenant/TenantDashboard'
+import TenantDashboard from './components/layouts/tenant/TenantDashboard'
 import ContactUs from './components/common/ContactUs'
 import LandingPage from './components/common/LandingPage'
 import LandlordDashboard from './components/layouts/landlord/LandlordDashboard'
@@ -20,42 +20,98 @@ import MyProperties from './components/layouts/landlord/MyProperties'
 import LandlordLayout from './components/layouts/landlord/LandlordLayout'
 import AddProperty from './components/layouts/landlord/AddProperty'
 import TermsAndConditions from './components/common/TnC'
+import PropertyListing from './components/common/PropertyListing'
+import AboutUs from './components/common/AboutUs'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import AuthDebugger from './components/common/AuthDebugger'
+import { isLoggedIn, isUserType } from './utils/auth'
 
+// Protected route component
+const ProtectedRoute = ({ children, allowedUserTypes }) => {
+  if (!isLoggedIn()) {
+    return <Navigate to="/login" />;
+  }
+  
+  // Check if user type is required and if user has that type
+  if (allowedUserTypes && !allowedUserTypes.includes(isUserType())) {
+    return <Navigate to="/" />;
+  }
+  
+  return children;
+};
 
 function App() {
   axios.defaults.baseURL = "http://localhost:1909";
   const location = useLocation();
+  const isDevelopment = process.env.NODE_ENV === 'development';
 
-  const showNavbar = ["/home", "/login", "/signup", "/contactus"].includes(location.pathname);
+  const showNavbar = ["/", "/home", "/login", "/signup", "/contactus", "/properties", "/aboutus", "/terms"].includes(location.pathname);
 
   return (
-    
-    <div className="layout-fixed sidebar-expand-lg bg-body-tertiary app-loaded sidebar">
-      <div className="app-wrapper">
-
-        {showNavbar && <Navbar/>}
-        <Routes>
-          <Route path='/' element={<LandingPage/  >}></Route>
-          <Route path='/login' element={<Login/>}></Route>
-          <Route path='/tenant/dashboard' element={<TenantDashboard/>}></Route>
-          <Route path="/landlord/*" element={<LandlordLayout/>}>
-            <Route path='dashboard' element={<LandlordDashboard/>}></Route>
-            <Route path='properties' element={<MyProperties/>}></Route>
-            <Route path='addnewproperty' element={<AddProperty/>}></Route>
-          </Route>
-          <Route path='/sample' element={<Sample/>}></Route>
-          <Route path='/signup' element={<Signup/>}></Route>
-          <Route path='/terms' element={<TermsAndConditions/>}></Route>
-          <Route path='/home' element={<Home/>}></Route>
-          <Route path='/contactus' element={<ContactUs/>}></Route>
-
-
-          <Route path='/user' element={<UserSidebar/>}>
-            <Route path='profile' element={<UserProfile/>}></Route>
-          </Route>
-        </Routes>
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <div className="layout-fixed sidebar-expand-lg bg-body-tertiary app-loaded sidebar">
+        <div className="app-wrapper">
+          {showNavbar && <Navbar/>}
+          <Routes>
+            {/* Public routes */}
+            <Route path='/' element={<LandingPage/>}></Route>
+            <Route path='/login' element={<Login/>}></Route>
+            <Route path='/signup' element={<Signup/>}></Route>
+            <Route path='/terms' element={<TermsAndConditions/>}></Route>
+            <Route path='/home' element={<Home/>}></Route>
+            <Route path='/properties' element={<PropertyListing/>}></Route>
+            <Route path='/aboutus' element={<AboutUs/>}></Route>
+            <Route path='/contactus' element={<ContactUs/>}></Route>
+            
+            {/* Tenant protected routes */}
+            <Route 
+              path='/tenant/dashboard' 
+              element={
+                <ProtectedRoute role="tenant" allowedRoles={["tenant"]}>
+                  <TenantDashboard/>
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Landlord protected routes */}
+            <Route 
+              path="/landlord" 
+              element={
+                <ProtectedRoute role="landlord" allowedRoles={["landlord"]}>
+                  <LandlordLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path='dashboard' element={<LandlordDashboard/>}></Route>
+              <Route path='properties' element={<MyProperties/>}></Route>
+              <Route path='addnewproperty' element={<AddProperty/>}></Route>
+            </Route>
+            
+            {/* User protected routes */}
+            <Route 
+              path='/user' 
+              element={
+                <ProtectedRoute>
+                  <UserSidebar/>
+                </ProtectedRoute>
+              }
+            >
+              <Route path='profile' element={<UserProfile/>}></Route>
+            </Route>
+            
+            {/* Sample route - should be protected or removed in production */}
+            <Route path='/sample' element={<Sample/>}></Route>
+            
+            {/* Catch-all route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+          
+          {/* Include the auth debugger in development environment only */}
+          {isDevelopment && <AuthDebugger />}
+        </div>
       </div>
-    </div>
+    </LocalizationProvider>
   )
 }
 

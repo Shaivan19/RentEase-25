@@ -20,12 +20,15 @@ const Login = () => {
       
       if (response.status === 200 && response.data?.data?.username) {
         const userData = response.data?.data;
-        const role = response.data?.userType;
+        const userType = response.data?.userType?.toLowerCase();
 
+        // Store user data directly in localStorage
         localStorage.setItem("user", JSON.stringify({
           userId: userData.userId,
           username: userData.username,
-          role: role,
+          userType: userType,
+          isLoggedIn: true,
+          token: response.data?.token
         }));
 
         toast.success(`Welcome ${userData.username}!`, {
@@ -35,12 +38,15 @@ const Login = () => {
         });
 
         setTimeout(() => {
-          if (role === "Tenant") {
+          // Direct role-based navigation
+          if (userType === "tenant") {
             navigate("/tenant/dashboard");
-          } else if (role === "Landlord") {
+          } else if (userType === "landlord") {
             navigate("/landlord/dashboard");
+          } else if (userType === "admin") {
+            navigate("/admin/dashboard");
           } else {
-            navigate("/admin-dashboard");
+            navigate("/home");
           }
         }, 2000);
       }

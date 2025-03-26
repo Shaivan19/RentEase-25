@@ -1,54 +1,273 @@
 import React, { useState } from "react";
-import { Drawer, List, ListItemButton, ListItemIcon, ListItemText, IconButton, Collapse } from "@mui/material";
-import { Home, Business, MonetizationOn, Person, ExitToApp, Menu, ExpandLess, ExpandMore } from "@mui/icons-material";
-import { Link } from "react-router-dom";
+import {
+  Drawer,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  IconButton,
+  Collapse,
+  Box,
+  Typography,
+  useTheme,
+  useMediaQuery,
+  Divider,
+  Avatar,
+  Tooltip,
+} from "@mui/material";
+import {
+  Home,
+  Business,
+  MonetizationOn,
+  Person,
+  ExitToApp,
+  Menu,
+  ExpandLess,
+  ExpandMore,
+  Dashboard,
+  AddHome,
+  Settings,
+  Notifications,
+  Assessment,
+  Close,
+} from "@mui/icons-material";
+import { Link, useLocation } from "react-router-dom";
 
-const LandlordSidebar = ({ isOpen, toggleSidebar }) => {
-  const [openProperties, setOpenProperties] = useState(false);
+const menuItems = [
+  {
+    title: "Dashboard",
+    icon: <Dashboard />,
+    path: "/landlord/dashboard",
+  },
+  {
+    title: "Properties",
+    icon: <Business />,
+    path: "/landlord/properties",
+    subItems: [
+      { title: "View Properties", path: "/landlord/properties", icon: <Business /> },
+      { title: "Add Property", path: "/landlord/addnewproperty", icon: <AddHome /> },
+    ],
+  },
+  {
+    title: "Earnings",
+    icon: <MonetizationOn />,
+    path: "/landlord/earnings",
+  },
+  {
+    title: "Reports",
+    icon: <Assessment />,
+    path: "/landlord/reports",
+  },
+  {
+    title: "Notifications",
+    icon: <Notifications />,
+    path: "/landlord/notifications",
+  },
+  {
+    title: "Profile",
+    icon: <Person />,
+    path: "/landlord/profile",
+  },
+  {
+    title: "Settings",
+    icon: <Settings />,
+    path: "/landlord/settings",
+  },
+];
+
+const LandlordSidebar = ({ isOpen, onClose }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const location = useLocation();
+  const [openMenus, setOpenMenus] = useState({});
+
+  const handleMenuClick = (title) => {
+    setOpenMenus((prev) => ({
+      ...prev,
+      [title]: !prev[title],
+    }));
+  };
+
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
 
   return (
-    <Drawer variant="persistent" open={isOpen} onClose={toggleSidebar} sx={{ "& .MuiDrawer-paper": { width: 250, backgroundColor: "#1e1e2d", color: "white" } }}>
-      <IconButton onClick={toggleSidebar} sx={{ color: "white", margin: 1 }}>
-        <Menu />
-      </IconButton>
-      <List>
-        <ListItemButton component={Link} to="/landlord/dashboard">
-          <ListItemIcon sx={{ color: "white" }}><Home /></ListItemIcon>
-          <ListItemText primary="Dashboard" />
-        </ListItemButton>
+    <Drawer
+      variant={isMobile ? "temporary" : "persistent"}
+      open={isOpen}
+      sx={{
+        width: 280,
+        flexShrink: 0,
+        "& .MuiDrawer-paper": {
+          width: 280,
+          boxSizing: "border-box",
+          border: "none",
+          backgroundColor: theme.palette.background.paper,
+          borderRight: `1px solid ${theme.palette.divider}`,
+        },
+      }}
+    >
+      {/* Profile Section */}
+      <Box
+        sx={{
+          p: 2,
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+          borderBottom: `1px solid ${theme.palette.divider}`,
+        }}
+      >
+        <Avatar
+          sx={{
+            width: 48,
+            height: 48,
+            border: `2px solid ${theme.palette.primary.main}`,
+          }}
+        >
+          JD
+        </Avatar>
+        <Box sx={{ flexGrow: 1 }}>
+          <Typography variant="subtitle1" fontWeight={600}>
+            John Doe
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Landlord
+          </Typography>
+        </Box>
+        {isMobile && (
+          <IconButton
+            onClick={() => onClose?.()}
+            sx={{
+              color: theme.palette.text.secondary,
+              '&:hover': {
+                backgroundColor: theme.palette.action.hover,
+              },
+            }}
+          >
+            <Close />
+          </IconButton>
+        )}
+      </Box>
 
-        <ListItemButton onClick={() => setOpenProperties(!openProperties)}>
-          <ListItemIcon sx={{ color: "white" }}><Business /></ListItemIcon>
-          <ListItemText primary="My Properties" />
-          {openProperties ? <ExpandLess /> : <ExpandMore />}
-        </ListItemButton>
-        <Collapse in={openProperties} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
-            <ListItemButton sx={{ pl: 4 }} component={Link} to="/landlord/properties">
-              <ListItemText primary="View Properties" />
-            </ListItemButton>
-            <ListItemButton sx={{ pl: 4 }} component={Link} to="/landlord/addnewproperty">
-              <ListItemText primary="Add Property" />
-            </ListItemButton>
-          </List>
-        </Collapse>
+      {/* Menu Items */}
+      <List sx={{ p: 1 }}>
+        {menuItems.map((item) => (
+          <React.Fragment key={item.title}>
+            {item.subItems ? (
+              <>
+                <ListItemButton
+                  onClick={() => handleMenuClick(item.title)}
+                  sx={{
+                    borderRadius: 1,
+                    mb: 0.5,
+                    "&:hover": {
+                      backgroundColor: theme.palette.action.hover,
+                    },
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      color: isActive(item.path) ? theme.palette.primary.main : "inherit",
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={item.title}
+                    sx={{
+                      color: isActive(item.path) ? theme.palette.primary.main : "inherit",
+                    }}
+                  />
+                  {openMenus[item.title] ? <ExpandLess /> : <ExpandMore />}
+                </ListItemButton>
+                <Collapse in={openMenus[item.title]} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                    {item.subItems.map((subItem) => (
+                      <ListItemButton
+                        key={subItem.title}
+                        component={Link}
+                        to={subItem.path}
+                        sx={{
+                          pl: 4,
+                          borderRadius: 1,
+                          mb: 0.5,
+                          "&:hover": {
+                            backgroundColor: theme.palette.action.hover,
+                          },
+                        }}
+                      >
+                        <ListItemIcon
+                          sx={{
+                            color: isActive(subItem.path) ? theme.palette.primary.main : "inherit",
+                          }}
+                        >
+                          {subItem.icon}
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={subItem.title}
+                          sx={{
+                            color: isActive(subItem.path) ? theme.palette.primary.main : "inherit",
+                          }}
+                        />
+                      </ListItemButton>
+                    ))}
+                  </List>
+                </Collapse>
+              </>
+            ) : (
+              <ListItemButton
+                component={Link}
+                to={item.path}
+                sx={{
+                  borderRadius: 1,
+                  mb: 0.5,
+                  "&:hover": {
+                    backgroundColor: theme.palette.action.hover,
+                  },
+                }}
+              >
+                <ListItemIcon
+                  sx={{
+                    color: isActive(item.path) ? theme.palette.primary.main : "inherit",
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.title}
+                  sx={{
+                    color: isActive(item.path) ? theme.palette.primary.main : "inherit",
+                  }}
+                />
+              </ListItemButton>
+            )}
+          </React.Fragment>
+        ))}
+      </List>
 
-        <ListItemButton component={Link} to="/landlord/earnings">
-          <ListItemIcon sx={{ color: "white" }}><MonetizationOn /></ListItemIcon>
-          <ListItemText primary="Earnings" />
-        </ListItemButton>
-
-        <ListItemButton component={Link} to="/landlord/profile">
-          <ListItemIcon sx={{ color: "white" }}><Person /></ListItemIcon>
-          <ListItemText primary="Profile" />
-        </ListItemButton>
-
-        <ListItemButton component={Link} to="/logout" sx={{ color: "red" }}>
-          <ListItemIcon sx={{ color: "red" }}><ExitToApp /></ListItemIcon>
+      {/* Logout Button */}
+      <Box sx={{ mt: "auto", p: 2 }}>
+        <Divider sx={{ mb: 2 }} />
+        <ListItemButton
+          component={Link}
+          to="/logout"
+          sx={{
+            borderRadius: 1,
+            color: theme.palette.error.main,
+            "&:hover": {
+              backgroundColor: theme.palette.error.lighter,
+            },
+          }}
+        >
+          <ListItemIcon sx={{ color: "inherit" }}>
+            <ExitToApp />
+          </ListItemIcon>
           <ListItemText primary="Logout" />
         </ListItemButton>
-      </List>
+      </Box>
     </Drawer>
   );
 };
+
 export default LandlordSidebar;
