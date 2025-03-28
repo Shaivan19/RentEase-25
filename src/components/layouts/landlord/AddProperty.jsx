@@ -412,7 +412,7 @@ const AddProperty = () => {
                 type="submit"
                 fullWidth
                 size="large"
-                sx={{ borderRadius: 2, py: 1.5 }}
+                sx={{ borderRadius: 2, py: 1.5 }}//nirjnthb+bub=inrgnnefndn
               >
                 Add Property
               </Button>

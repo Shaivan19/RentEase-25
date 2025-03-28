@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -30,10 +30,23 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import GoogleIcon from "@mui/icons-material/Google";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { styled } from "@mui/system";
 
 const Signup = () => {
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm();
+  const { 
+    register, 
+    handleSubmit, 
+    watch, 
+    formState: { errors } 
+  } = useForm({
+    mode: "onChange",
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: ""
+    }
+  });
+  
   const navigate = useNavigate();
   const theme = useTheme();
   const password = watch("password", "");
@@ -42,6 +55,11 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Stable callback for phone number changes
+  const handlePhoneChange = useCallback((newPhone) => {
+    setPhone(newPhone);
+  }, []);
 
   const onSubmit = async (data) => {
     setIsLoading(true);
@@ -62,7 +80,6 @@ const Signup = () => {
           theme: "colored",
         });
         
-        // Store minimal signup data for pre-filling login fields (optional)
         sessionStorage.setItem("signupData", JSON.stringify({
           email: userData.email,
           userType: userData.userType
@@ -71,15 +88,8 @@ const Signup = () => {
         setTimeout(() => {
           navigate("/login");
         }, 2000);
-      } else {
-        toast.error(response.data.message || "Signup failed", {
-          position: "top-right",
-          autoClose: 3000,
-          theme: "colored",
-        });
       }
     } catch (error) {
-      console.error("🔥 Signup Error:", error.response?.data || error.message);
       toast.error(error.response?.data?.message || "Error during signup. Please try again.", {
         position: "top-right",
         autoClose: 3000,
@@ -89,26 +99,6 @@ const Signup = () => {
       setIsLoading(false);
     }
   };
-
-  const StyledCard = styled(Card)(({ theme }) => ({
-    padding: theme?.spacing?.(4) || 32,
-    borderRadius: "16px",
-    boxShadow: "0px 10px 25px rgba(0, 0, 0, 0.1)",
-    width: "100%",
-    maxWidth: "450px",
-    maxHeight: "calc(100vh - 120px)",
-    overflowY: "auto",
-    textAlign: "center",
-    backgroundColor: theme?.palette?.background?.paper || '#ffffff',
-    border: `1px solid ${theme?.palette?.divider || '#e0e0e0'}`,
-    margin: '16px',
-    zIndex: 10,
-    '@media (max-width: 600px)': {
-      padding: theme?.spacing?.(2) || 16,
-      maxWidth: "90%",
-      maxHeight: "calc(100vh - 100px)",
-    },
-  }));
 
   return (
     <Box 
@@ -141,15 +131,33 @@ const Signup = () => {
           zIndex: 5
         }}
       >
-        <StyledCard>
-          <Typography variant="h4" sx={{ ...styles.heading, color: theme?.palette?.primary?.main || '#1976d2' }}>
+        <Card
+          sx={{
+            padding: theme.spacing(4),
+            borderRadius: "16px",
+            boxShadow: "0px 10px 25px rgba(0, 0, 0, 0.1)",
+            width: "100%",
+            maxWidth: "450px",
+            maxHeight: "calc(100vh - 120px)",
+            overflowY: "auto",
+            textAlign: "center",
+            backgroundColor: theme.palette.background.paper,
+            border: `1px solid ${theme.palette.divider}`,
+            margin: '16px',
+            '@media (max-width: 600px)': {
+              padding: theme.spacing(2),
+              maxWidth: "90%",
+              maxHeight: "calc(100vh - 100px)",
+            },
+          }}
+        >
+          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: theme.palette.primary.main }}>
             Join RentEase
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
             Create your account to get started
           </Typography>
 
-          {/* User Type Selection */}
           <FormControl component="fieldset" sx={{ mb: { xs: 2, sm: 3 }, width: '100%' }}>
             <FormLabel component="legend" sx={{ textAlign: 'left', mb: 1 }}>
               I am a:
@@ -166,7 +174,7 @@ const Signup = () => {
                 label="Tenant" 
                 sx={{
                   flex: 1,
-                  border: userType === 'tenant' ? `2px solid ${theme?.palette?.primary?.main || '#1976d2'}` : '2px solid transparent',
+                  border: userType === 'tenant' ? `2px solid ${theme.palette.primary.main}` : '2px solid transparent',
                   borderRadius: '8px',
                   padding: '8px 16px',
                   mr: 1
@@ -178,7 +186,7 @@ const Signup = () => {
                 label="Landlord" 
                 sx={{
                   flex: 1,
-                  border: userType === 'landlord' ? `2px solid ${theme?.palette?.primary?.main || '#1976d2'}` : '2px solid transparent',
+                  border: userType === 'landlord' ? `2px solid ${theme.palette.primary.main}` : '2px solid transparent',
                   borderRadius: '8px',
                   padding: '8px 16px'
                 }}
@@ -186,8 +194,12 @@ const Signup = () => {
             </RadioGroup>
           </FormControl>
 
-          {/* Form Fields */}
-          <Box sx={{ overflowY: 'auto' }}>
+          <Box 
+            component="form" 
+            onSubmit={handleSubmit(onSubmit)}
+            sx={{ overflowY: 'auto' }}
+            noValidate
+          >
             <TextField 
               label="Username" 
               fullWidth 
@@ -238,7 +250,7 @@ const Signup = () => {
               fullWidth
               defaultCountry="IN"
               value={phone}
-              onChange={setPhone}
+              onChange={handlePhoneChange}
               sx={{ mb: 2 }}
               InputProps={{ 
                 startAdornment: (
@@ -326,7 +338,6 @@ const Signup = () => {
                 color="primary"
                 fullWidth
                 disabled={isLoading}
-                onClick={handleSubmit(onSubmit)}
                 sx={{
                   mt: 1,
                   py: { xs: 1.2, sm: 1.5 },
@@ -361,19 +372,15 @@ const Signup = () => {
                   fontSize: { xs: '0.9rem', sm: '1rem' },
                   fontWeight: 600,
                   textTransform: 'none',
-                  borderColor: theme?.palette?.divider || '#e0e0e0',
+                  borderColor: theme.palette.divider,
                   color: 'text.primary',
                   '&:hover': {
-                    borderColor: theme?.palette?.divider || '#e0e0e0',
-                    backgroundColor: theme?.palette?.action?.hover || '#f5f5f5'
+                    borderColor: theme.palette.divider,
+                    backgroundColor: theme.palette.action.hover
                   }
                 }}
                 startIcon={<GoogleIcon />}
-                onClick={() => toast.info("Google Signup Coming Soon!", {
-                  position: "top-right",
-                  autoClose: 3000,
-                  theme: "colored",
-                })}
+                onClick={() => toast.info("Google Signup Coming Soon!")}
                 size="large"
               >
                 Google
@@ -388,7 +395,7 @@ const Signup = () => {
               sx={{ 
                 cursor: 'pointer', 
                 fontWeight: 'bold',
-                color: theme?.palette?.primary?.main || '#1976d2',
+                color: theme.palette.primary.main,
                 '&:hover': { textDecoration: 'underline' } 
               }}
               onClick={() => navigate("/login")}
@@ -403,7 +410,7 @@ const Signup = () => {
               variant="caption" 
               sx={{ 
                 cursor: 'pointer', 
-                color: theme?.palette?.primary?.main || '#1976d2',
+                color: theme.palette.primary.main,
                 '&:hover': { textDecoration: 'underline' } 
               }}
               onClick={() => navigate("/terms")}
@@ -411,33 +418,10 @@ const Signup = () => {
               Terms & Conditions
             </Typography>
           </Typography>
-
-          <Box 
-            sx={{
-              mt: 2,
-              pt: 2,
-              display: 'flex',
-              justifyContent: 'space-between',
-              borderTop: '1px solid',
-              borderColor: theme?.palette?.divider || '#e0e0e0',
-              '&:hover': {
-                borderColor: theme?.palette?.divider || '#e0e0e0',
-                backgroundColor: theme?.palette?.action?.hover || '#f5f5f5'
-              }
-            }}
-          >
-          </Box>
-        </StyledCard>
+        </Card>
       </motion.div>
     </Box>
   );
-};
-
-const styles = {
-  heading: {
-    fontWeight: 700,
-    mb: 1,
-  },
 };
 
 export default Signup;

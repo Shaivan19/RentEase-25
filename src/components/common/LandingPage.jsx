@@ -36,7 +36,7 @@ const GradientBackground = styled(Box)(({ theme }) => ({
   padding: theme.spacing ? theme.spacing(4) : '32px',
   position: 'relative',
   overflow: 'hidden',
-  paddingTop: 'calc(64px + 2rem)', // Add padding to account for navbar
+  paddingTop: 'calc(64px + 2rem)', // Navbar height + padding
   '&::before': {
     content: '""',
     position: 'absolute',
