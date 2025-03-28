@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Grid,
   Card,
@@ -19,7 +19,9 @@ import {
   Tabs,
   Tab,
   Pagination,
-  Avatar
+  Avatar,
+  CircularProgress,
+  Alert
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -37,6 +39,7 @@ import ContactMailIcon from "@mui/icons-material/ContactMail";
 import HomeIcon from "@mui/icons-material/Home";
 import { useNavigate } from "react-router-dom";
 import L from 'leaflet';
+import axios from "axios";
 
 // Fix for Leaflet default marker icon
 delete L.Icon.Default.prototype._getIconUrl;
@@ -46,87 +49,34 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Enhanced Sample Data
-const properties = [
-  { 
-    id: 1, 
-    title: "Modern Apartment", 
-    location: "Mumbai, India", 
-    price: "₹25,000/month", 
-    image: "https://github.com/Shaivan19/mybackgrounds/blob/main/an%20apartment.png?raw=true", 
-    rating: 4.5,
-    beds: 2,
-    baths: 1,
-    sqft: 850,
-    featured: true
-  },
-  { 
-    id: 2, 
-    title: "Luxury Villa", 
-    location: "Bangalore, India", 
-    price: "₹80,000/month", 
-    image: "https://github.com/Shaivan19/mybackgrounds/blob/main/an%20apartment.png?raw=true", 
-    rating: 4.8,
-    beds: 4,
-    baths: 3,
-    sqft: 2200,
-    featured: false
-  },
-  { 
-    id: 3, 
-    title: "Cozy Studio", 
-    location: "Pune, India", 
-    price: "₹15,000/month", 
-    image: "https://github.com/Shaivan19/mybackgrounds/blob/main/an%20apartment.png?raw=true", 
-    rating: 4.2,
-    beds: 1,
-    baths: 1,
-    sqft: 500,
-    featured: true
-  },
-  { 
-    id: 4, 
-    title: "Spacious Bungalow", 
-    location: "Delhi, India", 
-    price: "₹1,50,000/month", 
-    image: "https://github.com/Shaivan19/mybackgrounds/blob/main/an%20apartment.png?raw=true", 
-    rating: 4.7,
-    beds: 5,
-    baths: 4,
-    sqft: 3500,
-    featured: false
-  },
-];
-
-const officeSpaces = [
-  { 
-    id: 1, 
-    title: "Corporate Tower", 
-    location: "Mumbai, India", 
-    price: "₹1,50,000/month", 
-    image: "https://github.com/Shaivan19/mybackgrounds/blob/main/an%20apartment.png?raw=true", 
-    rating: 4.6,
-    size: "2000 sqft",
-    capacity: "20 people"
-  },
-  { 
-    id: 2, 
-    title: "IT Office Space", 
-    location: "Bangalore, India", 
-    price: "₹1,00,000/month", 
-    image: "https://github.com/Shaivan19/mybackgrounds/blob/main/an%20apartment.png?raw=true", 
-    rating: 4.8,
-    size: "1500 sqft",
-    capacity: "15 people"
-  },
-];
-
 const Home = () => {
   const theme = useTheme();
   const [favorites, setFavorites] = useState({});
   const [tabValue, setTabValue] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch properties from backend
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get('/properties');
+        setProperties(response.data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching properties:', err);
+        setError('Failed to load properties. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProperties();
+  }, []);
 
   const toggleFavorite = (id) => {
     setFavorites(prev => ({ ...prev, [id]: !prev[id] }));
@@ -155,56 +105,33 @@ const Home = () => {
         flexDirection: 'column'
       }}
     >
-      <Box sx={{ position: "relative" }}>
+      <Box sx={{ position: 'relative' }}>
         <CardMedia
           component="img"
           height="240"
-          image={property.image}
+          image={property.images[0] || 'https://via.placeholder.com/400x300?text=No+Image'}
           alt={property.title}
+          sx={{ objectFit: 'cover' }}
         />
-        <Box sx={{ 
-          position: "absolute",
-          top: 16,
-          left: 16,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-          gap: 1
-        }}>
-          {property.featured && (
-            <Chip
-              label="Featured"
-              color="secondary"
-              size="small"
-              sx={{ fontWeight: 700 }}
-            />
-          )}
-          <Chip
-            label={property.price}
-            color="primary"
-            sx={{ 
-              fontWeight: 700,
-              backgroundColor: alpha(theme.palette.primary.main, 0.9),
-              color: 'white'
-            }}
-          />
-        </Box>
-        <IconButton
-          onClick={() => toggleFavorite(property.id)}
+        <Box
           sx={{
-            position: "absolute",
+            position: 'absolute',
             top: 16,
             right: 16,
-            backgroundColor: "rgba(255,255,255,0.9)",
-            "&:hover": { backgroundColor: "white" },
+            backgroundColor: 'rgba(255,255,255,0.9)',
+            borderRadius: '50%',
+            p: 1,
+            cursor: 'pointer',
+            '&:hover': { backgroundColor: 'rgba(255,255,255,1)' }
           }}
+          onClick={() => toggleFavorite(property._id)}
         >
-          {favorites[property.id] ? (
+          {favorites[property._id] ? (
             <FavoriteIcon color="error" />
           ) : (
             <FavoriteBorderIcon />
           )}
-        </IconButton>
+        </Box>
       </Box>
       <CardContent sx={{ flexGrow: 1 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
@@ -212,7 +139,7 @@ const Home = () => {
             {property.title}
           </Typography>
           <Rating 
-            value={property.rating} 
+            value={property.rating || 4.5} 
             precision={0.5} 
             readOnly 
             size="small"
@@ -223,7 +150,7 @@ const Home = () => {
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <LocationOnIcon color="primary" sx={{ mr: 1 }} fontSize="small" />
           <Typography variant="body2" color="text.secondary">
-            {property.location}
+            {property.address ? `${property.address.street}, ${property.address.city}, ${property.address.state}` : property.location}
           </Typography>
         </Box>
         
@@ -234,7 +161,7 @@ const Home = () => {
             <Stack direction="row" alignItems="center" spacing={1}>
               <KingBed fontSize="small" color="action" />
               <Typography variant="body2">
-                {property.beds} {property.beds > 1 ? 'Beds' : 'Bed'}
+                {property.bedrooms} {property.bedrooms > 1 ? 'Beds' : 'Bed'}
               </Typography>
             </Stack>
           </Grid>
@@ -242,7 +169,7 @@ const Home = () => {
             <Stack direction="row" alignItems="center" spacing={1}>
               <Bathtub fontSize="small" color="action" />
               <Typography variant="body2">
-                {property.baths} {property.baths > 1 ? 'Baths' : 'Bath'}
+                {property.bathrooms} {property.bathrooms > 1 ? 'Baths' : 'Bath'}
               </Typography>
             </Stack>
           </Grid>
@@ -250,23 +177,28 @@ const Home = () => {
             <Stack direction="row" alignItems="center" spacing={1}>
               <SquareFoot fontSize="small" color="action" />
               <Typography variant="body2">
-                {property.sqft} sqft
+                {property.propertyType}
               </Typography>
             </Stack>
           </Grid>
         </Grid>
         
+        <Typography variant="h6" color="primary" fontWeight="bold" sx={{ mb: 2 }}>
+          ₹{property.price.toLocaleString()}/mo
+        </Typography>
+        
         <Button
           variant="contained"
           fullWidth
-          startIcon={<CalendarTodayIcon />}
+          onClick={() => navigate(`/property/${property._id}`)}
           sx={{
-            borderRadius: 2,
             py: 1.5,
+            borderRadius: 2,
+            textTransform: 'none',
             fontWeight: 600
           }}
         >
-          Schedule Visit
+          View Details
         </Button>
       </CardContent>
     </Card>
@@ -354,6 +286,20 @@ const Home = () => {
       </Grid>
     </Card>
   );
+
+  // Handle search
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/properties?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  // Handle search on Enter key
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      handleSearch();
+    }
+  };
 
   return (
     <Box 
@@ -448,6 +394,7 @@ const Home = () => {
               placeholder="Search by location, property type..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={handleKeyPress}
               sx={{
                 backgroundColor: "rgba(255, 255, 255, 0.9)",
                 borderRadius: 2,
@@ -471,6 +418,7 @@ const Home = () => {
             <Button
               variant="contained"
               size="large"
+              onClick={handleSearch}
               sx={{
                 minWidth: { xs: "100%", sm: "140px" },
                 height: "56px",
@@ -900,21 +848,38 @@ const Home = () => {
                 Featured Residential Properties
               </Typography>
               
-              <Grid container spacing={3}>
-                {properties.map((property, index) => (
-                  <Grid item xs={12} sm={6} md={4} lg={3} key={property.id}>
-                    <PropertyCard property={property} />
-                  </Grid>
-                ))}
-              </Grid>
+              {loading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                  <CircularProgress size={60} />
+                </Box>
+              ) : error ? (
+                <Alert severity="error" sx={{ mb: 3, borderRadius: '12px' }}>
+                  {error}
+                </Alert>
+              ) : (
+                <Grid container spacing={3}>
+                  {properties.slice(0, 4).map((property) => (
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={property._id}>
+                      <PropertyCard property={property} />
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
               
               <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}>
-                <Pagination
-                  count={5}
-                  color="primary"
-                  shape="rounded"
+                <Button
+                  variant="contained"
                   size="large"
-                />
+                  onClick={() => navigate('/properties')}
+                  sx={{
+                    py: 1.5,
+                    px: 4,
+                    borderRadius: 2,
+                    fontWeight: 'bold'
+                  }}
+                >
+                  View All Properties
+                </Button>
               </Box>
             </>
           )}

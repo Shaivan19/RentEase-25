@@ -1,460 +1,427 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
   Box,
   Container,
+  Typography,
+  Button,
   Grid,
   Card,
   CardContent,
   CardMedia,
-  Typography,
-  Button,
+  Chip,
+  IconButton,
+  Stack,
+  Divider,
   TextField,
   InputAdornment,
-  IconButton,
-  Chip,
-  Stack,
   Pagination,
   useTheme,
   useMediaQuery,
-  Drawer,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Slider,
-  FormControlLabel,
-  Checkbox,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import {
   Search,
-  LocationOn,
-  Bed as BedIcon,
-  Bathtub as BathtubIcon,
-  SquareFoot,
-  Favorite,
   FavoriteBorder,
+  Favorite,
+  LocationOn,
+  KingBed,
+  Bathtub,
+  SquareFoot,
   FilterList,
+  Sort,
+  Star
 } from '@mui/icons-material';
+import { styled } from '@mui/system';
 
-const properties = [
-  {
-    id: 1,
-    title: 'Modern Downtown Apartment',
-    location: 'Downtown, City',
-    price: 2500,
-    bedrooms: 2,
-    bathrooms: 2,
-    area: 1200,
-    type: 'Apartment',
-    images: ['https://github.com/Shaivan19/mybackgrounds/blob/main/an%20apartment.png?raw=true'],
-    amenities: ['Parking', 'Gym', 'Pool'],
-    isFavorite: false,
-  },
-  {
-    id: 2,
-    title: 'Luxury Villa with View',
-    location: 'Highland Hills, Suburb',
-    price: 3800,
-    bedrooms: 4,
-    bathrooms: 3,
-    area: 2800,
-    type: 'Villa',
-    images: ['https://github.com/Shaivan19/mybackgrounds/blob/main/an%20apartment.png?raw=true'],
-    amenities: ['Pool', 'Security', 'Garden'],
-    isFavorite: false,
-  },
-  {
-    id: 3,
-    title: 'Cozy Studio Apartment',
-    location: 'University District, City',
-    price: 1200,
-    bedrooms: 1,
-    bathrooms: 1,
-    area: 550,
-    type: 'Studio',
-    images: ['https://github.com/Shaivan19/mybackgrounds/blob/main/an%20apartment.png?raw=true'],
-    amenities: ['Furnished', 'Elevator', 'Pet Friendly'],
-    isFavorite: false,
-  },
-  {
-    id: 4,
-    title: 'Family Home with Garden',
-    location: 'Pleasant Valley, Suburb',
-    price: 3200,
-    bedrooms: 3,
-    bathrooms: 2,
-    area: 1800,
-    type: 'House',
-    images: ['https://github.com/Shaivan19/mybackgrounds/blob/main/an%20apartment.png?raw=true'],
-    amenities: ['Parking', 'Garden', 'Pet Friendly'],
-    isFavorite: false,
-  },
-  {
-    id: 5,
-    title: 'Penthouse with City Views',
-    location: 'Central District, City',
-    price: 4500,
-    bedrooms: 3,
-    bathrooms: 3,
-    area: 2000,
-    type: 'Apartment',
-    images: ['https://github.com/Shaivan19/mybackgrounds/blob/main/an%20apartment.png?raw=true'],
-    amenities: ['Parking', 'Gym', 'Security', 'Elevator'],
-    isFavorite: false,
-  },
-  {
-    id: 6,
-    title: 'Modern Townhouse',
-    location: 'Riverside Area, City',
-    price: 2800,
-    bedrooms: 3,
-    bathrooms: 2.5,
-    area: 1600,
-    type: 'Townhouse',
-    images: ['https://github.com/Shaivan19/mybackgrounds/blob/main/an%20apartment.png?raw=true'],
-    amenities: ['Parking', 'Pet Friendly', 'Furnished'],
-    isFavorite: false,
-  },
-];
+const PropertyCard = styled(Card)(({ theme }) => ({
+  borderRadius: '12px',
+  overflow: 'hidden',
+  transition: 'all 0.3s ease',
+  boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+  '&:hover': {
+    transform: 'translateY(-5px)',
+    boxShadow: '0 8px 30px rgba(0,0,0,0.12)'
+  }
+}));
 
-const PropertyListing = () => {
+const PriceTag = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  top: theme?.spacing?.(2) || '16px',
+  left: theme?.spacing?.(2) || '16px',
+  backgroundColor: theme?.palette?.primary?.main || '#1976d2',
+  color: 'white',
+  padding: theme?.spacing?.(0.5, 1.5) || '4px 12px',
+  borderRadius: '20px',
+  fontWeight: 700,
+  fontSize: '1rem',
+  zIndex: 1
+}));
+
+const FavoriteButton = styled(IconButton)(({ theme }) => ({
+  position: 'absolute',
+  top: theme?.spacing?.(2) || '16px',
+  right: theme?.spacing?.(2) || '16px',
+  backgroundColor: 'rgba(255,255,255,0.9)',
+  '&:hover': {
+    backgroundColor: 'rgba(255,255,255,1)'
+  }
+}));
+
+const PropertyListingPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [favorites, setFavorites] = useState([]);
+  const [sortOption, setSortOption] = useState('recent');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [priceRange, setPriceRange] = useState([0, 5000]);
-  const [selectedAmenities, setSelectedAmenities] = useState([]);
-  const [page, setPage] = useState(1);
-  const [favorites, setFavorites] = useState({});
+  const [filters, setFilters] = useState({
+    propertyType: '',
+    bedrooms: '',
+    bathrooms: '',
+    priceRange: ''
+  });
 
-  const amenities = [
-    'Parking',
-    'Gym',
-    'Pool',
-    'Security',
-    'Elevator',
-    'Pet Friendly',
-    'Furnished',
-    'Garden',
-  ];
+  // Fetch properties from backend
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get('/properties');
+        setProperties(response.data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching properties:', err);
+        setError('Failed to load properties. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleSearchChange = (event) => {
-    setSearchQuery(event.target.value);
+    fetchProperties();
+  }, []);
+
+  const toggleFavorite = (id) => {
+    if (favorites.includes(id)) {
+      setFavorites(favorites.filter(favId => favId !== id));
+    } else {
+      setFavorites([...favorites, id]);
+    }
   };
 
-  const handlePriceRangeChange = (event, newValue) => {
-    setPriceRange(newValue);
+  // Filter properties based on search and filters
+  const filteredProperties = properties.filter(property => {
+    const matchesSearch = property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         property.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         property.propertyType.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesType = !filters.propertyType || property.propertyType === filters.propertyType;
+    const matchesBeds = !filters.bedrooms || property.bedrooms >= parseInt(filters.bedrooms);
+    const matchesBaths = !filters.bathrooms || property.bathrooms >= parseInt(filters.bathrooms);
+    
+    let matchesPrice = true;
+    if (filters.priceRange) {
+      const [min, max] = filters.priceRange.split('-').map(Number);
+      matchesPrice = property.price >= min && (!max || property.price <= max);
+    }
+
+    return matchesSearch && matchesType && matchesBeds && matchesBaths && matchesPrice;
+  });
+
+  // Sort properties
+  const sortedProperties = [...filteredProperties].sort((a, b) => {
+    switch (sortOption) {
+      case 'price-low':
+        return a.price - b.price;
+      case 'price-high':
+        return b.price - a.price;
+      case 'recent':
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      default:
+        return 0;
+    }
+  });
+
+  const handleFilterChange = (field, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
-
-  const handleAmenityToggle = (amenity) => {
-    setSelectedAmenities((prev) =>
-      prev.includes(amenity)
-        ? prev.filter((a) => a !== amenity)
-        : [...prev, amenity]
-    );
-  };
-
-  const toggleFavorite = (propertyId) => {
-    setFavorites(prev => ({ ...prev, [propertyId]: !prev[propertyId] }));
-  };
-
-  const FilterDrawer = () => (
-    <Drawer
-      anchor="right"
-      open={filterDrawerOpen}
-      onClose={() => setFilterDrawerOpen(false)}
-      PaperProps={{
-        sx: {
-          width: { xs: '100%', sm: 400 },
-          p: 3,
-        },
-      }}
-    >
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h6" fontWeight="bold" gutterBottom>
-          Filters
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Refine your property search
-        </Typography>
-      </Box>
-
-      <Box sx={{ mb: 4 }}>
-        <Typography gutterBottom fontWeight="medium">Price Range</Typography>
-        <Slider
-          value={priceRange}
-          onChange={handlePriceRangeChange}
-          valueLabelDisplay="auto"
-          min={0}
-          max={5000}
-          step={100}
-          marks
-        />
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-          <Typography variant="body2">${priceRange[0]}</Typography>
-          <Typography variant="body2">${priceRange[1]}</Typography>
-        </Box>
-      </Box>
-
-      <Box sx={{ mb: 4 }}>
-        <Typography gutterBottom fontWeight="medium">Property Type</Typography>
-        <FormControl fullWidth size="small">
-          <Select defaultValue="">
-            <MenuItem value="">All Types</MenuItem>
-            <MenuItem value="apartment">Apartment</MenuItem>
-            <MenuItem value="house">House</MenuItem>
-            <MenuItem value="villa">Villa</MenuItem>
-            <MenuItem value="studio">Studio</MenuItem>
-            <MenuItem value="townhouse">Townhouse</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
-
-      <Box>
-        <Typography gutterBottom fontWeight="medium">Amenities</Typography>
-        <Grid container spacing={1}>
-          {amenities.map((amenity) => (
-            <Grid item xs={6} key={amenity}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={selectedAmenities.includes(amenity)}
-                    onChange={() => handleAmenityToggle(amenity)}
-                    size="small"
-                  />
-                }
-                label={<Typography variant="body2">{amenity}</Typography>}
-              />
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
-
-      <Button 
-        variant="contained" 
-        fullWidth 
-        sx={{ mt: 4 }}
-        onClick={() => setFilterDrawerOpen(false)}
-      >
-        Apply Filters
-      </Button>
-    </Drawer>
-  );
 
   return (
-    <Box 
-      component="main" 
-      sx={{ 
-        width: '100vw',
-        minHeight: '100vh',
-        bgcolor: 'background.default',
-        position: 'relative',
-        overflow: 'hidden',
-        pt: { xs: '64px', sm: '70px' }, // Add padding top to account for navbar height
-        boxSizing: 'border-box'
-      }}
-    >
-      <Container maxWidth={false} sx={{ py: 4, px: { xs: 2, sm: 4, md: 6 }, width: '100%' }}>
-        {/* Search and Filter Section */}
-        <Box sx={{ mb: 4 }}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={9}>
-              <TextField
-                fullWidth
-                placeholder="Search by location, property type, or amenities..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search />
-                    </InputAdornment>
-                  ),
-                }}
-                variant="outlined"
-                size="medium"
-                sx={{ 
-                  bgcolor: 'background.paper',
-                  borderRadius: 1,
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 1,
-                  }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<FilterList />}
-                onClick={() => setFilterDrawerOpen(true)}
-                size="large"
-                sx={{ 
-                  height: '100%', 
-                  minHeight: '56px',
-                  borderRadius: 1
-                }}
-              >
-                Filters
-              </Button>
-            </Grid>
-          </Grid>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      {/* Search and Filter Section */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 2 }}>
+          Find Your Perfect Property
+        </Typography>
+        
+        <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 2, mb: 3 }}>
+          <TextField
+            fullWidth
+            placeholder="Search by location, property type, or features..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search color="primary" />
+                </InputAdornment>
+              ),
+              sx: { borderRadius: '12px' }
+            }}
+          />
+          <Button
+            variant="contained"
+            startIcon={<FilterList />}
+            onClick={() => setFilterOpen(!filterOpen)}
+            sx={{
+              minWidth: '120px',
+              borderRadius: '12px',
+              px: 3,
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Filters
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Sort />}
+            onClick={() => setSortOption(sortOption === 'price-low' ? 'price-high' : 'price-low')}
+            sx={{
+              minWidth: '120px',
+              borderRadius: '12px',
+              px: 3,
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Sort
+          </Button>
         </Box>
 
-        <Typography 
-          variant="h4" 
-          component="h1" 
-          fontWeight="bold" 
-          gutterBottom 
-          sx={{ mb: 4 }}
-        >
-          Available Properties
-        </Typography>
+        {filterOpen && (
+          <Box sx={{ 
+            p: 3, 
+            mb: 3, 
+            borderRadius: '12px',
+            backgroundColor: 'background.paper',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+          }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>Filter Properties</Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField 
+                  select 
+                  fullWidth 
+                  label="Property Type" 
+                  value={filters.propertyType}
+                  onChange={(e) => handleFilterChange('propertyType', e.target.value)}
+                >
+                  <option value="">All Types</option>
+                  <option value="Apartment">Apartment</option>
+                  <option value="House">House</option>
+                  <option value="Villa">Villa</option>
+                  <option value="Studio">Studio</option>
+                  <option value="Commercial">Commercial</option>
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField 
+                  select 
+                  fullWidth 
+                  label="Bedrooms" 
+                  value={filters.bedrooms}
+                  onChange={(e) => handleFilterChange('bedrooms', e.target.value)}
+                >
+                  <option value="">Any</option>
+                  <option value="1">1+</option>
+                  <option value="2">2+</option>
+                  <option value="3">3+</option>
+                  <option value="4">4+</option>
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField 
+                  select 
+                  fullWidth 
+                  label="Bathrooms" 
+                  value={filters.bathrooms}
+                  onChange={(e) => handleFilterChange('bathrooms', e.target.value)}
+                >
+                  <option value="">Any</option>
+                  <option value="1">1+</option>
+                  <option value="2">2+</option>
+                  <option value="3">3+</option>
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField 
+                  select 
+                  fullWidth 
+                  label="Price Range" 
+                  value={filters.priceRange}
+                  onChange={(e) => handleFilterChange('priceRange', e.target.value)}
+                >
+                  <option value="">Any</option>
+                  <option value="0-1000">₹0 - ₹1,000</option>
+                  <option value="1000-2000">₹1,000 - ₹2,000</option>
+                  <option value="2000-3000">₹2,000 - ₹3,000</option>
+                  <option value="3000-5000">₹3,000 - ₹5,000</option>
+                  <option value="5000-10000">₹5,000 - ₹10,000</option>
+                  <option value="10000-999999">₹10,000+</option>
+                </TextField>
+              </Grid>
+            </Grid>
+          </Box>
+        )}
+      </Box>
 
-        {/* Property Grid */}
+      {/* Loading and Error States */}
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
+      {/* Property Listings */}
+      {!loading && !error && (
         <Grid container spacing={3}>
-          {properties.map((property) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={property.id}>
-              <Card
-                sx={{
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'transform 0.2s',
-                  borderRadius: 2,
-                  overflow: 'hidden',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 12px 32px rgba(0,0,0,0.12)',
-                  },
-                }}
-              >
+          {sortedProperties.map((property) => (
+            <Grid item xs={12} sm={6} md={4} key={property._id}>
+              <PropertyCard>
                 <Box sx={{ position: 'relative' }}>
                   <CardMedia
                     component="img"
-                    height="200"
-                    image={property.images[0]}
+                    height="220"
+                    image={property.images[0] || 'https://via.placeholder.com/400x300?text=No+Image'}
                     alt={property.title}
                   />
-                  <IconButton
-                    sx={{
-                      position: 'absolute',
-                      top: 8,
-                      right: 8,
-                      bgcolor: 'white',
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-                      '&:hover': {
-                        bgcolor: 'white',
-                      },
-                    }}
-                    onClick={() => toggleFavorite(property.id)}
-                  >
-                    {favorites[property.id] ? (
+                  <PriceTag>₹{property.price.toLocaleString()}/mo</PriceTag>
+                  <FavoriteButton onClick={() => toggleFavorite(property._id)}>
+                    {favorites.includes(property._id) ? (
                       <Favorite color="error" />
                     ) : (
                       <FavoriteBorder />
                     )}
-                  </IconButton>
+                  </FavoriteButton>
                 </Box>
-                <CardContent sx={{ flexGrow: 1, p: 2.5 }}>
-                  <Typography variant="h6" gutterBottom fontWeight="bold">
-                    {property.title}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <LocationOn fontSize="small" color="primary" sx={{ mr: 0.5 }} />
-                    <Typography variant="body2" color="text.secondary">
-                      {property.location}
+                <CardContent>
+                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
+                    <Typography variant="h6" component="h3" sx={{ fontWeight: 700 }}>
+                      {property.title}
                     </Typography>
-                  </Box>
-                  <Typography
-                    variant="h6"
-                    color="primary"
-                    gutterBottom
-                    sx={{ fontWeight: 600, mt: 1 }}
-                  >
-                    ₹{property.price}/month
-                  </Typography>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      gap: 2,
-                      mb: 2,
-                      mt: 1
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <BedIcon fontSize="small" color="action" sx={{ mr: 0.5 }} />
-                      <Typography variant="body2">
-                        {property.bedrooms} {property.bedrooms === 1 ? 'bed' : 'beds'}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <BathtubIcon fontSize="small" color="action" sx={{ mr: 0.5 }} />
-                      <Typography variant="body2">
-                        {property.bathrooms} {property.bathrooms === 1 ? 'bath' : 'baths'}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <SquareFoot fontSize="small" color="action" sx={{ mr: 0.5 }} />
-                      <Typography variant="body2">
-                        {property.area} sqft
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
-                    {property.amenities.slice(0, 3).map((amenity) => (
-                      <Chip
-                        key={amenity}
-                        label={amenity}
-                        size="small"
-                        variant="outlined"
-                        sx={{ borderRadius: 1 }}
-                      />
-                    ))}
-                    {property.amenities.length > 3 && (
-                      <Chip
-                        label={`+${property.amenities.length - 3}`}
-                        size="small"
-                        variant="outlined"
-                        sx={{ borderRadius: 1 }}
-                      />
-                    )}
+                    <Chip 
+                      label={property.propertyType}
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                    />
                   </Stack>
+                  
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+                    <LocationOn fontSize="small" color="primary" sx={{ verticalAlign: 'middle', mr: 0.5 }} />
+                    {property.address ? (
+                      `${property.address.street || ''}, ${property.address.city || ''}, ${property.address.state || ''}`
+                    ) : (
+                      property.location || 'Location not specified'
+                    )}
+                  </Typography>
+                  
+                  <Divider sx={{ my: 1.5 }} />
+                  
+                  <Grid container spacing={1} sx={{ mt: 1 }}>
+                    <Grid item xs={4}>
+                      <Stack direction="row" alignItems="center" spacing={0.5}>
+                        <KingBed fontSize="small" color="action" />
+                        <Typography variant="body2">
+                          {property.bedrooms} {property.bedrooms > 1 ? 'Beds' : 'Bed'}
+                        </Typography>
+                      </Stack>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Stack direction="row" alignItems="center" spacing={0.5}>
+                        <Bathtub fontSize="small" color="action" />
+                        <Typography variant="body2">
+                          {property.bathrooms} {property.bathrooms > 1 ? 'Baths' : 'Bath'}
+                        </Typography>
+                      </Stack>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Stack direction="row" alignItems="center" spacing={0.5}>
+                        <SquareFoot fontSize="small" color="action" />
+                        <Typography variant="body2">
+                          {property.propertyType}
+                        </Typography>
+                      </Stack>
+                    </Grid>
+                  </Grid>
+
+                  {property.amenities && property.amenities.length > 0 && (
+                    <Box sx={{ mt: 2 }}>
+                      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                        {property.amenities.slice(0, 3).map((amenity, index) => (
+                          <Chip
+                            key={index}
+                            label={amenity}
+                            size="small"
+                            variant="outlined"
+                          />
+                        ))}
+                        {property.amenities.length > 3 && (
+                          <Chip
+                            label={`+${property.amenities.length - 3} more`}
+                            size="small"
+                            variant="outlined"
+                          />
+                        )}
+                      </Stack>
+                    </Box>
+                  )}
+                  
                   <Button
-                    variant="contained"
                     fullWidth
-                    sx={{ 
-                      mt: 'auto',
-                      borderRadius: 1,
-                      py: 1.25
-                    }}
+                    variant="contained"
+                    sx={{ mt: 3, py: 1.5, borderRadius: '8px', fontWeight: 600 }}
+                    onClick={() => window.location.href = `/property/${property._id}`}
                   >
                     View Details
                   </Button>
                 </CardContent>
-              </Card>
+              </PropertyCard>
             </Grid>
           ))}
         </Grid>
+      )}
 
-        {/* Pagination */}
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6, mb: 2 }}>
+      {/* Pagination */}
+      {!loading && !error && sortedProperties.length > 0 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
           <Pagination
-            count={3}
-            page={page}
-            onChange={(event, value) => setPage(value)}
+            count={Math.ceil(sortedProperties.length / 9)}
             color="primary"
-            size="large"
-            siblingCount={1}
+            shape="rounded"
+            sx={{
+              '& .MuiPaginationItem-root': {
+                borderRadius: '8px',
+                fontWeight: 600
+              }
+            }}
           />
         </Box>
-
-        {/* Filter Drawer */}
-        <FilterDrawer />
-      </Container>
-    </Box>
+      )}
+    </Container>
   );
 };
 
-export default PropertyListing; 
+export default PropertyListingPage; 

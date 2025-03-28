@@ -20,12 +20,14 @@ import MyProperties from './components/layouts/landlord/MyProperties'
 import LandlordLayout from './components/layouts/landlord/LandlordLayout'
 import AddProperty from './components/layouts/landlord/AddProperty'
 import TermsAndConditions from './components/common/TnC'
-import PropertyListing from './components/common/PropertyListing'
+// import PropertyListing from './components/common/PropertyListing'
 import AboutUs from './components/common/AboutUs'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import AuthDebugger from './components/common/AuthDebugger'
 import { isLoggedIn, isUserType } from './utils/auth'
+import PropertyListingPage from './components/common/PropertList'
+import LandlordProperties from './components/layouts/landlord/LandlordProperties'
 
 // Protected route component
 const ProtectedRoute = ({ children, allowedUserTypes }) => {
@@ -60,7 +62,7 @@ function App() {
             <Route path='/signup' element={<Signup/>}></Route>
             <Route path='/terms' element={<TermsAndConditions/>}></Route>
             <Route path='/home' element={<Home/>}></Route>
-            <Route path='/properties' element={<PropertyListing/>}></Route>
+            <Route path='/properties' element={<PropertyListingPage/>}></Route>
             <Route path='/aboutus' element={<AboutUs/>}></Route>
             <Route path='/contactus' element={<ContactUs/>}></Route>
             
@@ -84,7 +86,7 @@ function App() {
               }
             >
               <Route path='dashboard' element={<LandlordDashboard/>}></Route>
-              <Route path='properties' element={<MyProperties/>}></Route>
+              <Route path='properties' element={<LandlordProperties/>}></Route>
               <Route path='addnewproperty' element={<AddProperty/>}></Route>
             </Route>
             

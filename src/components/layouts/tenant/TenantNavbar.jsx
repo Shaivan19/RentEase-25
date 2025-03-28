@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { AppBar, Toolbar, Typography, Button, IconButton, Menu, MenuItem, Avatar, Tooltip, Badge, InputBase } from "@mui/material";
+import { AppBar, Toolbar, Typography, Button, IconButton, Menu, MenuItem, Avatar, Tooltip, Badge, InputBase, Box } from "@mui/material";
 import { styled, alpha } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
@@ -7,7 +7,7 @@ import BusinessIcon from "@mui/icons-material/Business";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import SearchIcon from "@mui/icons-material/Search";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -73,8 +73,38 @@ const TenantNavbar = ({ toggleDrawer }) => {
             <NotificationsIcon />
           </Badge>
         </IconButton>
-        <Button color="inherit" startIcon={<HomeIcon />} onClick={() => navigate("/home")} sx={{ textTransform: "none" }}>Home</Button>
-        <Button color="inherit" startIcon={<BusinessIcon />} onClick={() => navigate("/properties")} sx={{ textTransform: "none" }}>Properties</Button>
+        <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 2, mr: 2 }}>
+          <Button
+            color="inherit"
+            component={Link}
+            to="/tenant/home"
+            sx={{
+              textTransform: 'none',
+              color: '#ffffff',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                color: '#ffffff'
+              }
+            }}
+          >
+            Home
+          </Button>
+          <Button
+            color="inherit"
+            component={Link}
+            to="/tenant/properties"
+            sx={{
+              textTransform: 'none',
+              color: '#ffffff',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                color: '#ffffff'
+              }
+            }}
+          >
+            Properties
+          </Button>
+        </Box>
         <Tooltip title="Account Settings">
           <IconButton onClick={handleMenuOpen} color="inherit">
             <Avatar sx={{ bgcolor: "#fff", color: "#0072ff" }}>

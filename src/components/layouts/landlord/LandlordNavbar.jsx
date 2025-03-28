@@ -16,6 +16,7 @@ import {
   ListItemIcon,
   ListItemText,
   InputBase,
+  Button,
 } from "@mui/material";
 import {
   Notifications,
@@ -26,8 +27,9 @@ import {
   DarkMode,
   LightMode,
   Search,
+  AccountCircle,
 } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const LandlordNavbar = ({ toggleSidebar, isSidebarOpen }) => {
   const theme = useTheme();
@@ -116,6 +118,38 @@ const LandlordNavbar = ({ toggleSidebar, isSidebarOpen }) => {
             sx={{ width: "100%" }}
             inputProps={{ "aria-label": "search" }}
           />
+        </Box>
+
+        {/* Add Navigation Links */}
+        <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 2, mr: 2 }}>
+          <Button
+            color="inherit"
+            component={Link}
+            to="/landlord/home"
+            sx={{
+              textTransform: 'none',
+              color: theme.palette.text.primary,
+              '&:hover': {
+                backgroundColor: theme.palette.action.hover,
+              }
+            }}
+          >
+            Home
+          </Button>
+          <Button
+            color="inherit"
+            component={Link}
+            to="/landlord/properties"
+            sx={{
+              textTransform: 'none',
+              color: theme.palette.text.primary,
+              '&:hover': {
+                backgroundColor: theme.palette.action.hover,
+              }
+            }}
+          >
+            Properties
+          </Button>
         </Box>
 
         {/* Right Side Actions */}
