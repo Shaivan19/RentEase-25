@@ -18,6 +18,7 @@ import {
   IconButton,
   Chip,
   Stack,
+  Divider,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -53,6 +54,13 @@ const AddProperty = () => {
     availableFrom: new Date(),
     amenities: [],
     images: [],
+    address: {
+      street: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      country: "",
+    },
   });
 
   const [previewImages, setPreviewImages] = useState([]);
@@ -69,7 +77,19 @@ const AddProperty = () => {
   }, []);
 
   const handleChange = (e) => {
-    setPropertyData({ ...propertyData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setPropertyData(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
+        }
+      }));
+    } else {
+      setPropertyData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleCheckboxChange = (e) => {
@@ -109,16 +129,24 @@ const AddProperty = () => {
     formData.append("description", propertyData.description);
     formData.append("price", propertyData.price);
     formData.append("location", propertyData.location);
-    formData.append("ownerId", user.userId);
-    formData.append("ownerName", user.username);
+    formData.append("owner", user.userId);
     formData.append("propertyType", propertyData.propertyType);
     formData.append("bedrooms", propertyData.bedrooms);
     formData.append("bathrooms", propertyData.bathrooms);
-    formData.append("furnished", propertyData.furnished);
+    formData.append("furnished", propertyData.furnished.toString());
     formData.append("availableFrom", propertyData.availableFrom.toISOString().split("T")[0]);
+    
+    // Append address fields
+    formData.append("address[street]", propertyData.address.street);
+    formData.append("address[city]", propertyData.address.city);
+    formData.append("address[state]", propertyData.address.state);
+    formData.append("address[zipCode]", propertyData.address.zipCode);
+    formData.append("address[country]", propertyData.address.country);
 
-    propertyData.amenities.forEach((amenity) => formData.append("amenities", amenity));
+    // Append amenities as a comma-separated string
+    formData.append("amenities", propertyData.amenities.join(','));
 
+    // Append images
     for (let i = 0; i < propertyData.images.length; i++) {
       formData.append("images", propertyData.images[i]);
     }
@@ -129,8 +157,11 @@ const AddProperty = () => {
       });
       alert("Property added successfully!");
       console.log(response.data);
+      // Reset form or redirect
+      window.location.href = "/properties";
     } catch (error) {
       console.error("Error adding property:", error);
+      alert(error.response?.data?.error || "Error adding property. Please try again.");
     }
   };
 
@@ -192,6 +223,67 @@ const AddProperty = () => {
                 sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
               />
             </Grid>
+
+            {/* Address Fields */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Address Details</Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Street Address"
+                name="address.street"
+                fullWidth
+                onChange={handleChange}
+                required
+                variant="outlined"
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="City"
+                name="address.city"
+                fullWidth
+                onChange={handleChange}
+                required
+                variant="outlined"
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="State"
+                name="address.state"
+                fullWidth
+                onChange={handleChange}
+                required
+                variant="outlined"
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="ZIP Code"
+                name="address.zipCode"
+                fullWidth
+                onChange={handleChange}
+                required
+                variant="outlined"
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Country"
+                name="address.country"
+                fullWidth
+                onChange={handleChange}
+                required
+                variant="outlined"
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              />
+            </Grid>
+
             <Grid item xs={12} md={6}>
               <Select
                 name="propertyType"
