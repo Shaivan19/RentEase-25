@@ -3,14 +3,13 @@ import {
   Box,
   Grid,
   Typography,
-  Card,
-  CardContent,
   Paper,
   useTheme,
   useMediaQuery,
   IconButton,
   Tooltip,
   Divider,
+  CircularProgress,
 } from "@mui/material";
 import {
   MonetizationOn,
@@ -23,16 +22,52 @@ import {
 import EarningsChart from "./components/EarningChart";
 import TenantRequestsTable from "./components/TenantRequestTable";
 import StatsCards from "./components/StatsCards";
+import axios from "axios";
+import { formatToRupees } from "../../../utils/Currency";
 
 const LandlordDashboard = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState({
+    totalProperties: 0,
+    pendingRequests: 0,
+    totalEarnings: 0,
+    earningsTrend: "0",
+    monthlyEarnings: [],
+    tenantRequests: []
+  });
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      const userData = JSON.parse(localStorage.getItem('user'));
+      const response = await axios.get(`/api/landlord/dashboard/${userData.userId}`);
+      setDashboardData(response.data);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
   const handleRefresh = () => {
     setLastUpdated(new Date());
-    // Add refresh logic here
+    fetchDashboardData();
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ width: "100%", flexGrow: 1, p: { xs: 2, md: 3 } }}>
@@ -40,7 +75,7 @@ const LandlordDashboard = () => {
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
         <Box>
           <Typography variant="h4" fontWeight={700} gutterBottom sx={{ color: "primary.main" }}>
-            Welcome back, Landlord
+            Welcome back, {JSON.parse(localStorage.getItem('user'))?.name || 'Landlord'}
           </Typography>
           <Typography variant="subtitle1" color="text.secondary">
             Here's what's happening with your properties today
@@ -66,24 +101,24 @@ const LandlordDashboard = () => {
           stats={[
             {
               title: "Total Properties",
-              value: 12,
+              value: dashboardData.totalProperties,
               icon: <HomeWork fontSize="large" />,
-              trend: "+2",
-              trendColor: "success.main",
+              trend: dashboardData.propertyTrend,
+              trendColor: dashboardData.propertyTrend?.startsWith('+') ? "success.main" : "error.main",
             },
             {
               title: "Pending Requests",
-              value: 5,
+              value: dashboardData.pendingRequests,
               icon: <Assignment fontSize="large" />,
-              trend: "-1",
-              trendColor: "error.main",
+              trend: dashboardData.requestsTrend,
+              trendColor: dashboardData.requestsTrend?.startsWith('+') ? "error.main" : "success.main",
             },
             {
               title: "Total Earnings",
-              value: "$15,240",
+              value: formatToRupees(dashboardData.totalEarnings),
               icon: <MonetizationOn fontSize="large" />,
-              trend: "+12%",
-              trendColor: "success.main",
+              trend: dashboardData.earningsTrend,
+              trendColor: dashboardData.earningsTrend?.startsWith('+') ? "success.main" : "error.main",
             },
           ]}
         />
@@ -109,12 +144,12 @@ const LandlordDashboard = () => {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <TrendingUp color="success" />
                 <Typography variant="body2" color="success.main">
-                  +12% from last month
+                  {dashboardData.earningsTrend} from last month
                 </Typography>
               </Box>
             </Box>
             <Divider sx={{ mb: 3 }} />
-            <EarningsChart />
+            <EarningsChart data={dashboardData.monthlyEarnings} />
           </Paper>
         </Grid>
 
@@ -138,7 +173,7 @@ const LandlordDashboard = () => {
               </Typography>
             </Box>
             <Divider sx={{ mb: 3 }} />
-            <TenantRequestsTable />
+            <TenantRequestsTable requests={dashboardData.tenantRequests} />
           </Paper>
         </Grid>
       </Grid>

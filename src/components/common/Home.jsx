@@ -31,23 +31,13 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import ApartmentIcon from '@mui/icons-material/Apartment';
 import BusinessIcon from '@mui/icons-material/Business';
 import { motion } from "framer-motion";
-import "leaflet/dist/leaflet.css";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { alpha } from "@mui/material/styles";
 import { KingBed, Bathtub, SquareFoot } from "@mui/icons-material";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
 import HomeIcon from "@mui/icons-material/Home";
 import { useNavigate } from "react-router-dom";
-import L from 'leaflet';
 import axios from "axios";
-
-// Fix for Leaflet default marker icon
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+import { loadGoogleMapsAPI } from "../../utils/googleMaps";
 
 const Home = () => {
   const theme = useTheme();
@@ -58,6 +48,9 @@ const Home = () => {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [map, setMap] = useState(null);
+  const [marker, setMarker] = useState(null);
+  const [mapError, setMapError] = useState(null);
 
   // Fetch properties from backend
   useEffect(() => {
@@ -77,6 +70,114 @@ const Home = () => {
 
     fetchProperties();
   }, []);
+
+  useEffect(() => {
+    const initMap = async () => {
+      try {
+        const maps = await loadGoogleMapsAPI();
+        
+        const mapOptions = {
+          center: { lat: 23.033863, lng: 72.585022 },
+          zoom: 15,
+          // Simplified styles for better performance
+          styles: [
+            {
+              featureType: "all",
+              elementType: "geometry",
+              stylers: [{ color: "#242f3e" }]
+            },
+            {
+              featureType: "all",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#746855" }]
+            },
+            {
+              featureType: "road",
+              elementType: "geometry",
+              stylers: [{ color: "#38414e" }]
+            },
+            {
+              featureType: "water",
+              elementType: "geometry",
+              stylers: [{ color: "#17263c" }]
+            }
+          ],
+          // Disable unnecessary features
+          disableDefaultUI: true,
+          zoomControl: true,
+          streetViewControl: false,
+          mapTypeControl: false,
+          fullscreenControl: false,
+          styles: [
+            {
+              featureType: "all",
+              elementType: "geometry",
+              stylers: [{ color: "#242f3e" }]
+            },
+            {
+              featureType: "all",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#746855" }]
+            },
+            {
+              featureType: "road",
+              elementType: "geometry",
+              stylers: [{ color: "#38414e" }]
+            },
+            {
+              featureType: "water",
+              elementType: "geometry",
+              stylers: [{ color: "#17263c" }]
+            }
+          ]
+        };
+
+        const mapElement = document.getElementById('map');
+        if (!mapElement) return;
+
+        const newMap = new maps.Map(mapElement, mapOptions);
+        setMap(newMap);
+
+        const markerPosition = { lat: 10.0531754, lng: 73.7031263 };
+        const newMarker = new maps.Marker({
+          position: markerPosition,
+          map: newMap,
+          title: 'RentEase Office',
+          optimized: true // Enable marker optimization
+        });
+        setMarker(newMarker);
+
+        const infoWindow = new maps.InfoWindow({
+          content: `
+            <div style="padding: 10px;">
+              <h3 style="margin: 0 0 5px 0;">RentEase Office</h3>
+              <p style="margin: 0;">Anupam Society-1</p>
+              <p style="margin: 0;">Near Rathi Hospital, Ahmedabad</p>
+            </div>
+          `
+        });
+
+        newMarker.addListener('click', () => {
+          infoWindow.open(newMap, newMarker);
+        });
+
+        // Cleanup function
+        return () => {
+          if (newMarker) {
+            newMarker.setMap(null);
+          }
+          if (newMap) {
+            newMap.setOptions({ mapTypeId: 'roadmap' });
+          }
+        };
+      } catch (error) {
+        console.error('Error loading Google Maps:', error);
+        setMapError('Failed to load Google Maps. Please try again later.');
+      }
+    };
+
+    initMap();
+  }, []); // Empty dependency array to prevent re-renders
 
   const toggleFavorite = (id) => {
     setFavorites(prev => ({ ...prev, [id]: !prev[id] }));
@@ -940,26 +1041,21 @@ const Home = () => {
               border: `1px solid ${theme.palette.divider}`
             }}
           >
-            <MapContainer
-              center={[23.033863, 72.585022]}
-              zoom={15}
-              style={{ height: "100%", width: "100%" }}
-            >
-              <TileLayer 
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              />
-              <Marker position={[23.033863, 72.585022]}>
-                <Popup>
-                  <Typography variant="subtitle2" fontWeight="bold">
-                    RentEase Office
-                  </Typography>
-                  <Typography variant="body2">
-                    Anupam Society-1, Near Rathi Hospital, Ahmedabad
-                  </Typography>
-                </Popup>
-              </Marker>
-            </MapContainer>
+            {mapError ? (
+              <Box
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: 'grey.100'
+                }}
+              >
+                <Typography color="error">{mapError}</Typography>
+              </Box>
+            ) : (
+              <div id="map" style={{ width: '100%', height: '100%' }} />
+            )}
           </Box>
         </Container>
       </Box>

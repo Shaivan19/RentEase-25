@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Grid,
@@ -15,7 +15,8 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
-  useTheme
+  useTheme,
+  IconButton
 } from "@mui/material";
 import {
   Phone,
@@ -25,24 +26,17 @@ import {
   Facebook,
   Twitter,
   Instagram,
-  LinkedIn
+  LinkedIn,
+  Send,
+  Close
 } from "@mui/icons-material";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from 'leaflet';
 import { useForm } from "react-hook-form";
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { contactConfig } from "../../config/contact";
 import { sendContactForm } from "../../services/contactService";
-
-// Fix for the default marker icon
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+import { loadGoogleMapsAPI } from "../../utils/googleMaps";
+import { motion } from "framer-motion";
 
 // Form validation schema
 const schema = yup.object().shape({
@@ -54,197 +48,263 @@ const schema = yup.object().shape({
 
 const ContactUs = () => {
   const theme = useTheme();
-  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [map, setMap] = useState(null);
+  const [marker, setMarker] = useState(null);
+  const [mapError, setMapError] = useState(null);
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: yupResolver(schema)
   });
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success",
-  });
-  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const initMap = async () => {
+      try {
+        const maps = await loadGoogleMapsAPI();
+        
+        const mapOptions = {
+          center: { lat: 23.033863, lng: 72.585022 },
+          zoom: 15,
+          disableDefaultUI: true,
+          zoomControl: true,
+          streetViewControl: false,
+          mapTypeControl: false,
+          fullscreenControl: false,
+          styles: [
+            {
+              featureType: "all",
+              elementType: "geometry",
+              stylers: [{ color: "#242f3e" }]
+            },
+            {
+              featureType: "all",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#746855" }]
+            },
+            {
+              featureType: "administrative.locality",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#d59563" }]
+            },
+            {
+              featureType: "road",
+              elementType: "geometry",
+              stylers: [{ color: "#38414e" }]
+            },
+            {
+              featureType: "road",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#9ca5b3" }]
+            },
+            {
+              featureType: "water",
+              elementType: "geometry",
+              stylers: [{ color: "#17263c" }]
+            }
+          ]
+        };
+
+        const mapElement = document.getElementById('map');
+        if (!mapElement) return;
+
+        const newMap = new maps.Map(mapElement, mapOptions);
+        setMap(newMap);
+
+        const markerPosition = { lat: 10.0531754, lng: 73.7031263 };
+        const newMarker = new maps.Marker({
+          position: markerPosition,
+          map: newMap,
+          title: 'RentEase Office',
+          optimized: true
+        });
+        setMarker(newMarker);
+
+        const infoWindow = new maps.InfoWindow({
+          content: `
+            <div style="padding: 10px;">
+              <h3 style="margin: 0 0 5px 0;">RentEase Office</h3>
+              <p style="margin: 0;">Anupam Society-1</p>
+              <p style="margin: 0;">Near Rathi Hospital, Ahmedabad</p>
+            </div>
+          `
+        });
+
+        newMarker.addListener('click', () => {
+          infoWindow.open(newMap, newMarker);
+        });
+
+        return () => {
+          if (newMarker) {
+            newMarker.setMap(null);
+          }
+          if (newMap) {
+            newMap.setOptions({});
+          }
+        };
+      } catch (error) {
+        console.error('Error loading Google Maps:', error);
+        setMapError('Failed to load Google Maps. Please try again later.');
+      }
+    };
+
+    initMap();
+  }, []);
 
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      const response = await sendContactForm(data);
+      await sendContactForm(data);
       setSnackbar({
         open: true,
-        message: response.data?.message || "Message sent successfully! We'll get back to you soon.",
-        severity: "success",
+        message: 'Message sent successfully! We\'ll get back to you soon.',
+        severity: 'success'
       });
       reset();
     } catch (error) {
-      console.error("Contact form submission error:", error);
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || "Failed to send message. Please try again.",
-        severity: "error",
+        message: 'Failed to send message. Please try again.',
+        severity: 'error'
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
-  };
-
-  const socialMediaIcons = {
-    facebook: <Facebook />,
-    twitter: <Twitter />,
-    instagram: <Instagram />,
-    linkedin: <LinkedIn />
-  };
-
   return (
-    <Box sx={{ 
-      bgcolor: theme.palette.background.default, 
-      minHeight: '100vh', 
-      width: '100%', 
-      overflow: 'hidden',
-      pt: { xs: '64px', sm: '70px' } // Add padding top to account for navbar height
-    }}>
-      {/* Header Section */}
-      <Box
-        sx={{
+    <Box 
+      sx={{ 
+        pt: { xs: 8, sm: 10 },
+        pb: 8,
+        backgroundColor: theme.palette.background.default,
+        width: '100vw',
+        left: 0,
+        right: 0,
+        position: 'relative',
+        minHeight: '100vh'
+      }}
+    >
+      <Container 
+        maxWidth={false} 
+        disableGutters
+        sx={{ 
+          px: { xs: 2, sm: 4, md: 6, lg: 8 },
           width: '100%',
-          bgcolor: '#0072ff',
-          color: 'white',
-          py: 4,
-          textAlign: 'center'
+          margin: 0,
+          maxWidth: '100% !important'
         }}
       >
-        <Typography variant="h3" component="h1" gutterBottom>
-          Get in Touch
-        </Typography>
-        <Typography variant="h6">
-          Have questions about RentEase? We're here to help you find the perfect rental solution.
-        </Typography>
-      </Box>
-
-      {/* Contact Form Section */}
-      <Container maxWidth={false} sx={{ mt: 6, mb: 6, width: '100%', px: { xs: 2, sm: 4, md: 6 } }}>
         <Grid container spacing={4}>
-          {/* Left side - Company Information */}
-          <Grid item xs={12} md={6}>
-            <Paper elevation={3} sx={{ p: 4, height: '100%' }}>
-              <Typography variant="h5" component="h2" fontWeight="bold" gutterBottom color="primary">
-                Company Information
+          {/* Contact Information */}
+          <Grid item xs={12} md={4}>
+            <Paper elevation={3} sx={{ p: 3, height: '100%', width: '100%' }}>
+              <Typography variant="h4" gutterBottom>
+                Contact Us
               </Typography>
-              <Divider sx={{ mb: 3 }} />
-              
-              <List sx={{ p: 0 }}>
-                <ListItem sx={{ px: 0, py: 1.5 }}>
+              <Typography variant="body1" color="text.secondary" paragraph>
+                Have questions? We're here to help. Send us a message and we'll respond as soon as possible.
+              </Typography>
+
+              <List>
+                <ListItem>
+                  <ListItemIcon>
+                    <LocationOn color="primary" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Address"
+                    secondary="123 Business Street, New Delhi, India"
+                  />
+                </ListItem>
+                <ListItem>
                   <ListItemIcon>
                     <Phone color="primary" />
                   </ListItemIcon>
                   <ListItemText 
                     primary="Phone" 
-                    secondary={contactConfig.phone} 
-                    primaryTypographyProps={{ fontWeight: 'bold' }}
+                    secondary="+91 123 456 7890"
                   />
                 </ListItem>
-                
-                <ListItem sx={{ px: 0, py: 1.5 }}>
+                <ListItem>
                   <ListItemIcon>
                     <Email color="primary" />
                   </ListItemIcon>
                   <ListItemText 
                     primary="Email" 
-                    secondary={contactConfig.email} 
-                    primaryTypographyProps={{ fontWeight: 'bold' }}
+                    secondary="contact@rentease.com"
                   />
                 </ListItem>
-                
-                <ListItem sx={{ px: 0, py: 1.5 }}>
-                  <ListItemIcon>
-                    <LocationOn color="primary" />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary="Address" 
-                    secondary={contactConfig.address} 
-                    primaryTypographyProps={{ fontWeight: 'bold' }}
-                  />
-                </ListItem>
-                
-                <ListItem sx={{ px: 0, py: 1.5 }}>
+                <ListItem>
                   <ListItemIcon>
                     <AccessTime color="primary" />
                   </ListItemIcon>
                   <ListItemText 
-                    primary="Business Hours" 
-                    secondary={
-                      <>
-                        <Typography variant="body2">Weekdays: {contactConfig.businessHours.weekdays}</Typography>
-                        <Typography variant="body2">Saturday: {contactConfig.businessHours.saturday}</Typography>
-                        <Typography variant="body2">Sunday: {contactConfig.businessHours.sunday}</Typography>
-                      </>
-                    } 
-                    primaryTypographyProps={{ fontWeight: 'bold' }}
+                    primary="Working Hours"
+                    secondary="Mon - Fri: 9:00 AM - 6:00 PM"
                   />
                 </ListItem>
               </List>
               
-              <Typography variant="h6" sx={{ mt: 3, mb: 2 }} fontWeight="bold">
-                Connect With Us
+              <Divider sx={{ my: 3 }} />
+
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Follow Us
               </Typography>
               <Box sx={{ display: 'flex', gap: 2 }}>
-                {Object.entries(contactConfig.socialMedia).map(([platform, url]) => (
-                  <Button 
-                    key={platform}
-                    href={url} 
-                    target="_blank"
-                    variant="contained" 
-                    color="primary"
-                    sx={{ minWidth: 'auto', p: 1 }}
-                  >
-                    {socialMediaIcons[platform]}
-                  </Button>
-                ))}
+                  <IconButton color="primary">
+                    <Facebook />
+                  </IconButton>
+                  <IconButton color="primary">
+                    <Twitter />
+                  </IconButton>
+                  <IconButton color="primary">
+                    <Instagram />
+                  </IconButton>
+                  <IconButton color="primary">
+                    <LinkedIn />
+                  </IconButton>
+                </Box>
               </Box>
             </Paper>
           </Grid>
           
-          {/* Right side - Contact Form */}
-          <Grid item xs={12} md={6}>
-            <Paper elevation={3} sx={{ p: 4 }}>
-              <Typography variant="h5" component="h2" fontWeight="bold" gutterBottom color="primary">
-                Send Us a Message
+          {/* Contact Form and Map */}
+          <Grid item xs={12} md={8}>
+            <Grid container spacing={4}>
+              {/* Contact Form */}
+              <Grid item xs={12}>
+                <Paper elevation={3} sx={{ p: 3, width: '100%' }}>
+                  <Typography variant="h5" gutterBottom>
+                    Send us a Message
               </Typography>
-              <Divider sx={{ mb: 3 }} />
-              
-              <form onSubmit={handleSubmit(onSubmit)} noValidate>
+                  <form onSubmit={handleSubmit(onSubmit)}>
                 <Grid container spacing={3}>
-                  <Grid item xs={12}>
+                      <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
-                      label="Full Name"
-                      {...register("name")}
+                          label="Name"
+                          {...register('name')}
                       error={!!errors.name}
                       helperText={errors.name?.message}
-                      disabled={loading}
                     />
                   </Grid>
-                  <Grid item xs={12}>
+                      <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
-                      label="Email Address"
-                      type="email"
-                      {...register("email")}
+                          label="Email"
+                          {...register('email')}
                       error={!!errors.email}
                       helperText={errors.email?.message}
-                      disabled={loading}
                     />
                   </Grid>
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
                       label="Subject"
-                      {...register("subject")}
+                          {...register('subject')}
                       error={!!errors.subject}
                       helperText={errors.subject?.message}
-                      disabled={loading}
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -253,10 +313,9 @@ const ContactUs = () => {
                       label="Message"
                       multiline
                       rows={4}
-                      {...register("message")}
+                          {...register('message')}
                       error={!!errors.message}
                       helperText={errors.message?.message}
-                      disabled={loading}
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -266,69 +325,62 @@ const ContactUs = () => {
                       size="large"
                       fullWidth
                       disabled={loading}
+                        >
+                          {loading ? <CircularProgress size={24} /> : 'Send Message'}
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </form>
+                </Paper>
+              </Grid>
+
+              {/* Google Map */}
+              <Grid item xs={12}>
+                <Box
+                  component={motion.div}
+                  initial={{ opacity: 0, x: 50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  sx={{
+                    height: "400px",
+                    borderRadius: 4,
+                    overflow: "hidden",
+                    boxShadow: 3,
+                    border: `1px solid ${theme.palette.divider}`,
+                    width: '100%'
+                  }}
+                >
+                  {mapError ? (
+                    <Box
                       sx={{
-                        bgcolor: '#0072ff',
-                        color: 'white',
-                        py: 1.5,
-                        '&:hover': {
-                          bgcolor: '#0059cc'
-                        }
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: 'grey.100'
                       }}
                     >
-                      {loading ? (
-                        <CircularProgress size={24} color="inherit" />
-                      ) : (
-                        "SEND MESSAGE"
-                      )}
-                    </Button>
-                  </Grid>
-                </Grid>
-              </form>
-            </Paper>
+                      <Typography color="error">{mapError}</Typography>
+                    </Box>
+                  ) : (
+                    <div id="map" style={{ width: '100%', height: '100%' }} />
+                  )}
+                </Box>
+              </Grid>
+            </Grid>
           </Grid>
         </Grid>
-      </Container>
-
-      {/* Map Section */}
-      <Container maxWidth={false} sx={{ mt: 4, mb: 6, width: '100%', px: { xs: 2, sm: 4, md: 6 } }}>
-        <Paper elevation={3} sx={{ p: 4 }}>
-          <Typography variant="h5" textAlign="center" gutterBottom fontWeight="bold" color="primary">
-            Our Location
-          </Typography>
-          <Divider sx={{ mb: 3 }} />
-          <Box sx={{ height: '400px', width: '100%' }}>
-            <MapContainer
-              center={[contactConfig.location.lat, contactConfig.location.lng]}
-              zoom={contactConfig.location.zoom}
-              style={{ height: '100%', width: '100%' }}
-            >
-              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              <Marker position={[contactConfig.location.lat, contactConfig.location.lng]}>
-                <Popup>
-                  <Typography variant="subtitle2" fontWeight="bold">
-                    RentEase Office
-                  </Typography>
-                  <Typography variant="body2">
-                    {contactConfig.address}
-                  </Typography>
-                </Popup>
-              </Marker>
-            </MapContainer>
-          </Box>
-        </Paper>
       </Container>
 
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
       >
         <Alert
-          onClose={handleCloseSnackbar}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
           severity={snackbar.severity}
-          variant="filled"
-          sx={{ width: "100%" }}
+          sx={{ width: '100%' }}
         >
           {snackbar.message}
         </Alert>

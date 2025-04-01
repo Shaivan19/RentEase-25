@@ -232,7 +232,7 @@ const Navbar = () => {
                   }
                 }}
               >
-                <MenuItem onClick={() => { navigate("/profile"); handleMenuClose(); }}>
+                <MenuItem onClick={() => { navigate("/user/profile"); handleMenuClose(); }}>
                   <ListItemIcon>
                     <AccountCircleIcon fontSize="small" />
                   </ListItemIcon>
@@ -345,7 +345,7 @@ const Navbar = () => {
                 </ListItem>
                 <ListItem 
                   button 
-                  onClick={() => { navigate("/profile"); setDrawerOpen(false); }}
+                  onClick={() => { navigate("/user/profile"); setDrawerOpen(false); }}
                 >
                   <ListItemIcon>
                     <AccountCircleIcon />

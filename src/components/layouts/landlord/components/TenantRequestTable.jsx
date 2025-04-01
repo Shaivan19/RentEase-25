@@ -21,38 +21,15 @@ import {
   Cancel as CancelIcon,
   Pending as PendingIcon,
 } from "@mui/icons-material";
-
-const requests = [
-  {
-    tenant: "John Doe",
-    property: "2 BHK Apartment",
-    status: "Pending",
-    date: "2024-03-25",
-    avatar: "JD",
-  },
-  {
-    tenant: "Alice Smith",
-    property: "Studio Apartment",
-    status: "Approved",
-    date: "2024-03-24",
-    avatar: "AS",
-  },
-  {
-    tenant: "Michael Lee",
-    property: "3 BHK Villa",
-    status: "Rejected",
-    date: "2024-03-23",
-    avatar: "ML",
-  },
-];
+import axios from "axios";
 
 const getStatusColor = (status) => {
-  switch (status) {
-    case "Pending":
+  switch (status.toLowerCase()) {
+    case "pending":
       return "warning";
-    case "Approved":
+    case "approved":
       return "success";
-    case "Rejected":
+    case "rejected":
       return "error";
     default:
       return "default";
@@ -60,20 +37,30 @@ const getStatusColor = (status) => {
 };
 
 const getStatusIcon = (status) => {
-  switch (status) {
-    case "Pending":
+  switch (status.toLowerCase()) {
+    case "pending":
       return <PendingIcon />;
-    case "Approved":
+    case "approved":
       return <CheckCircleIcon />;
-    case "Rejected":
+    case "rejected":
       return <CancelIcon />;
     default:
       return null;
   }
 };
 
-const TenantRequestsTable = () => {
+const TenantRequestsTable = ({ requests = [] }) => {
   const theme = useTheme();
+
+  const handleStatusChange = async (requestId, newStatus) => {
+    try {
+      await axios.put(`/api/tenant-requests/${requestId}`, { status: newStatus });
+      // Refresh the parent component's data
+      window.location.reload();
+    } catch (error) {
+      console.error("Error updating request status:", error);
+    }
+  };
 
   return (
     <TableContainer
@@ -110,9 +97,9 @@ const TenantRequestsTable = () => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {requests.map((req, index) => (
+          {requests.map((req) => (
             <TableRow
-              key={index}
+              key={req._id}
               sx={{
                 "&:hover": {
                   backgroundColor: theme.palette.action.hover,
@@ -129,21 +116,21 @@ const TenantRequestsTable = () => {
                       fontSize: "0.875rem",
                     }}
                   >
-                    {req.avatar}
+                    {req.tenant.name.charAt(0)}
                   </Avatar>
                   <Typography variant="body2" fontWeight={500}>
-                    {req.tenant}
+                    {req.tenant.name}
                   </Typography>
                 </Stack>
               </TableCell>
               <TableCell>
                 <Typography variant="body2" color="text.secondary">
-                  {req.property}
+                  {req.property.name}
                 </Typography>
               </TableCell>
               <TableCell>
                 <Typography variant="body2" color="text.secondary">
-                  {new Date(req.date).toLocaleDateString()}
+                  {new Date(req.createdAt).toLocaleDateString()}
                 </Typography>
               </TableCell>
               <TableCell align="right">
@@ -160,15 +147,23 @@ const TenantRequestsTable = () => {
                       },
                     }}
                   />
-                  {req.status === "Pending" && (
+                  {req.status.toLowerCase() === "pending" && (
                     <Box sx={{ display: "flex", gap: 0.5 }}>
                       <Tooltip title="Approve">
-                        <IconButton size="small" color="success">
+                        <IconButton 
+                          size="small" 
+                          color="success"
+                          onClick={() => handleStatusChange(req._id, "approved")}
+                        >
                           <CheckCircleIcon />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Reject">
-                        <IconButton size="small" color="error">
+                        <IconButton 
+                          size="small" 
+                          color="error"
+                          onClick={() => handleStatusChange(req._id, "rejected")}
+                        >
                           <CancelIcon />
                         </IconButton>
                       </Tooltip>
@@ -178,6 +173,15 @@ const TenantRequestsTable = () => {
               </TableCell>
             </TableRow>
           ))}
+          {requests.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={4} align="center">
+                <Typography variant="body2" color="text.secondary">
+                  No tenant requests found
+                </Typography>
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </TableContainer>

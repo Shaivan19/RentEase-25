@@ -1,29 +1,27 @@
 import React from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, Link, useLocation } from 'react-router-dom'
 import { UserNavbar } from './UserNavbar'
+import { getUserId } from '../../utils/auth'
 
 export const UserSidebar = () => {
+  const location = useLocation();
+  const userId = getUserId();
+
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
+
   return (
     <>
-    <UserNavbar></UserNavbar>
-    <aside
+      <UserNavbar />
+      <aside
         className="app-sidebar bg-body-secondary shadow"
         data-bs-theme="dark"
       >
         <div className="sidebar-brand">
-          
-          <a href="./index.html" className="brand-link">
-            
-            <img
-              src="../../dist/assets/img/AdminLTELogo.png"
-              alt="AdminLTE Logo"
-              className="brand-image opacity-75 shadow"
-            />
-            
-            <span className="brand-text fw-light">AdminLTE 4</span>
-            
-          </a>
-          
+          <Link to="/user/profile" className="brand-link">
+            <span className="brand-text fw-light">User Dashboard</span>
+          </Link>
         </div>
 
         <div
@@ -42,84 +40,54 @@ export const UserSidebar = () => {
           }}
         >
           <nav className="mt-2">
-            
             <ul
               className="nav sidebar-menu flex-column"
               data-lte-toggle="treeview"
               role="menu"
               data-accordion="false"
             >
-              <li className="nav-item menu-open">
-                <a href="#" className="nav-link active">
-                  <i className="nav-icon bi bi-speedometer" />
-                  <p>
-                    Dashboard
-                    <i className="nav-arrow bi bi-chevron-right" />
-                  </p>
-                </a>
-                <ul className="nav nav-treeview">
-                  <li className="nav-item">
-                    <a href="./index.html" className="nav-link active">
-                      <i className="nav-icon bi bi-circle" />
-                      <p>Dashboard v1</p>
-                    </a>
-                  </li>
-                  <li className="nav-item">
-                    <a href="./index2.html" className="nav-link">
-                      <i className="nav-icon bi bi-circle" />
-                      <p>Dashboard v2</p>
-                    </a>
-                  </li>
-                  <li className="nav-item">
-                    <a href="./index3.html" className="nav-link">
-                      <i className="nav-icon bi bi-circle" />
-                      <p>Dashboard v3</p>
-                    </a>
-                  </li>
-                </ul>
+              <li className="nav-item">
+                <Link 
+                  to="/user/profile" 
+                  className={`nav-link ${isActive('/user/profile') ? 'active' : ''}`}
+                >
+                  <i className="nav-icon bi bi-person" />
+                  <p>Profile</p>
+                </Link>
               </li>
               <li className="nav-item">
-                <a href="./generate/theme.html" className="nav-link">
-                  <i className="nav-icon bi bi-palette" />
-                  <p>Theme Generate</p>
-                </a>
+                <Link 
+                  to="/user/settings" 
+                  className={`nav-link ${isActive('/user/settings') ? 'active' : ''}`}
+                >
+                  <i className="nav-icon bi bi-gear" />
+                  <p>Settings</p>
+                </Link>
               </li>
               <li className="nav-item">
-                <a href="#" className="nav-link">
-                  <i className="nav-icon bi bi-box-seam-fill" />
-                  <p>
-                    Widgets
-                    <i className="nav-arrow bi bi-chevron-right" />
-                  </p>
-                </a>
-                <ul className="nav nav-treeview">
-                  <li className="nav-item">
-                    <a href="./widgets/small-box.html" className="nav-link">
-                      <i className="nav-icon bi bi-circle" />
-                      <p>Small Box</p>
-                    </a>
-                  </li>
-                  <li className="nav-item">
-                    <a href="./widgets/info-box.html" className="nav-link">
-                      <i className="nav-icon bi bi-circle" />
-                      <p>info Box</p>
-                    </a>
-                  </li>
-                  <li className="nav-item">
-                    <a href="./widgets/cards.html" className="nav-link">
-                      <i className="nav-icon bi bi-circle" />
-                      <p>Cards</p>
-                    </a>
-                  </li>
-                </ul>
+                <Link 
+                  to="/user/notifications" 
+                  className={`nav-link ${isActive('/user/notifications') ? 'active' : ''}`}
+                >
+                  <i className="nav-icon bi bi-bell" />
+                  <p>Notifications</p>
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link 
+                  to="/user/security" 
+                  className={`nav-link ${isActive('/user/security') ? 'active' : ''}`}
+                >
+                  <i className="nav-icon bi bi-shield-lock" />
+                  <p>Security</p>
+                </Link>
               </li>
             </ul>
-            
           </nav>
         </div>
       </aside>
-      <main class="app-main">
-        <Outlet></Outlet>
+      <main className="app-main">
+        <Outlet />
       </main>
     </>
   )

@@ -11,14 +11,7 @@ import {
   AreaChart,
 } from "recharts";
 import { Box, useTheme } from "@mui/material";
-
-const data = [
-  { month: "Jan", earnings: 2000, target: 2500 },
-  { month: "Feb", earnings: 3500, target: 3000 },
-  { month: "Mar", earnings: 5000, target: 3500 },
-  { month: "Apr", earnings: 4200, target: 4000 },
-  { month: "May", earnings: 6000, target: 4500 },
-];
+import { formatToRupees } from "../../../../utils/Currency";
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -44,7 +37,7 @@ const CustomTooltip = ({ active, payload, label }) => {
                 bgcolor: "primary.main",
               }}
             />
-            <Box>Earnings: ${payload[0].value}</Box>
+            <Box>Earnings: {formatToRupees(payload[0].value)}</Box>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Box
@@ -55,7 +48,7 @@ const CustomTooltip = ({ active, payload, label }) => {
                 bgcolor: "success.main",
               }}
             />
-            <Box>Target: ${payload[1].value}</Box>
+            <Box>Target: {formatToRupees(payload[1].value)}</Box>
           </Box>
         </Box>
       </Box>
@@ -64,8 +57,11 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-const EarningsChart = () => {
+const EarningsChart = ({ data }) => {
   const theme = useTheme();
+
+  // Format the currency for Y-axis ticks
+  const formatYAxis = (value) => formatToRupees(value);
 
   return (
     <Box sx={{ width: "100%", height: 300 }}>
@@ -94,6 +90,7 @@ const EarningsChart = () => {
           <YAxis
             stroke={theme.palette.text.secondary}
             tick={{ fill: theme.palette.text.secondary }}
+            tickFormatter={formatYAxis}
           />
           <Tooltip content={<CustomTooltip />} />
           <Area

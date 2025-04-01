@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AppBar,
   Toolbar,
@@ -29,16 +29,26 @@ import {
   Search,
   AccountCircle,
 } from "@mui/icons-material";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import { getCurrentUser } from "../../../utils/auth";
 
 const LandlordNavbar = ({ toggleSidebar, isSidebarOpen }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const navigate = useNavigate();
+  const location = useLocation();
   const [anchorEl, setAnchorEl] = useState(null);
   const [notificationsAnchor, setNotificationsAnchor] = useState(null);
   const open = Boolean(anchorEl);
   const notificationsOpen = Boolean(notificationsAnchor);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const userData = getCurrentUser();
+    if (userData) {
+      setUser(userData);
+    }
+  }, []);
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -266,35 +276,60 @@ const LandlordNavbar = ({ toggleSidebar, isSidebarOpen }) => {
           onClose={handleMenuClose}
           PaperProps={{
             sx: {
-              mt: 1,
+              mt: 1.5,
               minWidth: 200,
-            },
+              borderRadius: 2,
+              overflow: 'visible',
+              '&:before': {
+                content: '""',
+                display: 'block',
+                position: 'absolute',
+                top: 0,
+                right: 14,
+                width: 10,
+                height: 10,
+                bgcolor: 'background.paper',
+                transform: 'translateY(-50%) rotate(45deg)',
+                zIndex: 0,
+              }
+            }
           }}
         >
           <Box sx={{ p: 2, borderBottom: `1px solid ${theme.palette.divider}` }}>
             <Typography variant="subtitle1" fontWeight={600}>
-              John Doe
+              {user?.username || 'User'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              john.doe@example.com
+              {user?.email}
             </Typography>
           </Box>
-          <MenuItem onClick={() => navigate("/landlord/profile")}>
+          <MenuItem 
+            component={Link} 
+            to="/landlord/profile" 
+            onClick={handleMenuClose}
+            sx={{
+              color: location.pathname === '/landlord/profile' ? 'primary.main' : 'text.primary'
+            }}
+          >
             <ListItemIcon>
               <Person fontSize="small" />
             </ListItemIcon>
             <ListItemText>Profile</ListItemText>
           </MenuItem>
-          <MenuItem onClick={() => navigate("/landlord/settings")}>
+          <MenuItem 
+            component={Link} 
+            to="/landlord/settings" 
+            onClick={handleMenuClose}
+          >
             <ListItemIcon>
               <Settings fontSize="small" />
             </ListItemIcon>
             <ListItemText>Settings</ListItemText>
           </MenuItem>
           <Divider />
-          <MenuItem onClick={handleLogout} sx={{ color: "error.main" }}>
+          <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
             <ListItemIcon>
-              <Logout fontSize="small" color="error" />
+              <Logout fontSize="small" />
             </ListItemIcon>
             <ListItemText>Logout</ListItemText>
           </MenuItem>

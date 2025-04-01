@@ -4,7 +4,7 @@ import { UserSidebar } from './components/layouts/UserSidebar'
 import "./assets/css/Adminlte.css"
 import "./assets/css/adminlte.min.css"
 // import { Route, Routes } from 'react-router-dom'
-import { UserProfile } from './components/user/UserProfile'
+import UserProfile from './components/user/UserProfile'
 import Login from './components/common/Login'
 import Signup from './components/common/SignUp'
 import { Sample } from './components/common/Sample'
@@ -61,7 +61,8 @@ function App() {
             <Route path='/login' element={<Login/>}></Route>
             <Route path='/signup' element={<Signup/>}></Route>
             <Route path='/terms' element={<TermsAndConditions/>}></Route>
-            <Route path='/home' element={<Home/>}></Route>
+            <Route path='
+            ' element={<Home/>}></Route>
             <Route path='/properties' element={<PropertyListingPage/>}></Route>
             <Route path='/aboutus' element={<AboutUs/>}></Route>
             <Route path='/contactus' element={<ContactUs/>}></Route>
@@ -74,8 +75,12 @@ function App() {
                   <TenantDashboard/>
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route path='profile' element={<UserProfile/>}></Route>
             
+            </Route>
+            
+
             {/* Landlord protected routes */}
             <Route 
               path="/landlord" 
@@ -88,6 +93,8 @@ function App() {
               <Route path='dashboard' element={<LandlordDashboard/>}></Route>
               <Route path='properties' element={<LandlordProperties/>}></Route>
               <Route path='addnewproperty' element={<AddProperty/>}></Route>
+              <Route path='profile' element={<UserProfile/>}></Route>
+              <Route path='settings' element={<UserProfile/>}></Route>
             </Route>
             
             {/* User protected routes */}

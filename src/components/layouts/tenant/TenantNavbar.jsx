@@ -77,7 +77,7 @@ const TenantNavbar = ({ toggleDrawer }) => {
           <Button
             color="inherit"
             component={Link}
-            to="/tenant/home"
+            to="/home"
             sx={{
               textTransform: 'none',
               color: '#ffffff',
@@ -92,7 +92,7 @@ const TenantNavbar = ({ toggleDrawer }) => {
           <Button
             color="inherit"
             component={Link}
-            to="/tenant/properties"
+            to="/properties"
             sx={{
               textTransform: 'none',
               color: '#ffffff',
@@ -118,7 +118,7 @@ const TenantNavbar = ({ toggleDrawer }) => {
           onClose={handleMenuClose}
           sx={{ mt: 5 }}
         >
-          <MenuItem onClick={() => { navigate("/profile"); handleMenuClose(); }}>Profile</MenuItem>
+          <MenuItem onClick={() => { navigate("/"); handleMenuClose(); }}>Profile</MenuItem>
           <MenuItem onClick={() => { localStorage.removeItem("user"); navigate("/login"); handleMenuClose(); }}>Logout</MenuItem>
         </Menu>
       </Toolbar>
