@@ -51,6 +51,7 @@ const Home = () => {
   const [map, setMap] = useState(null);
   const [marker, setMarker] = useState(null);
   const [mapError, setMapError] = useState(null);
+  const [markers, setMarkers] = useState([]);
 
   // Fetch properties from backend
   useEffect(() => {
@@ -79,30 +80,6 @@ const Home = () => {
         const mapOptions = {
           center: { lat: 23.033863, lng: 72.585022 },
           zoom: 15,
-          // Simplified styles for better performance
-          styles: [
-            {
-              featureType: "all",
-              elementType: "geometry",
-              stylers: [{ color: "#242f3e" }]
-            },
-            {
-              featureType: "all",
-              elementType: "labels.text.fill",
-              stylers: [{ color: "#746855" }]
-            },
-            {
-              featureType: "road",
-              elementType: "geometry",
-              stylers: [{ color: "#38414e" }]
-            },
-            {
-              featureType: "water",
-              elementType: "geometry",
-              stylers: [{ color: "#17263c" }]
-            }
-          ],
-          // Disable unnecessary features
           disableDefaultUI: true,
           zoomControl: true,
           streetViewControl: false,
@@ -120,9 +97,19 @@ const Home = () => {
               stylers: [{ color: "#746855" }]
             },
             {
+              featureType: "administrative.locality",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#d59563" }]
+            },
+            {
               featureType: "road",
               elementType: "geometry",
               stylers: [{ color: "#38414e" }]
+            },
+            {
+              featureType: "road",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#9ca5b3" }]
             },
             {
               featureType: "water",
@@ -138,36 +125,22 @@ const Home = () => {
         const newMap = new maps.Map(mapElement, mapOptions);
         setMap(newMap);
 
-        const markerPosition = { lat: 10.0531754, lng: 73.7031263 };
-        const newMarker = new maps.Marker({
-          position: markerPosition,
-          map: newMap,
-          title: 'RentEase Office',
-          optimized: true // Enable marker optimization
-        });
-        setMarker(newMarker);
-
-        const infoWindow = new maps.InfoWindow({
-          content: `
-            <div style="padding: 10px;">
-              <h3 style="margin: 0 0 5px 0;">RentEase Office</h3>
-              <p style="margin: 0;">Anupam Society-1</p>
-              <p style="margin: 0;">Near Rathi Hospital, Ahmedabad</p>
-            </div>
-          `
+        // Add markers for each property
+        properties.forEach(property => {
+          const markerPosition = { lat: property.latitude, lng: property.longitude };
+          const newMarker = new maps.Marker({
+            position: markerPosition,
+            map: newMap,
+            title: property.title,
+            optimized: true
+          });
+          markers.push(newMarker);
         });
 
-        newMarker.addListener('click', () => {
-          infoWindow.open(newMap, newMarker);
-        });
-
-        // Cleanup function
         return () => {
-          if (newMarker) {
-            newMarker.setMap(null);
-          }
+          markers.forEach(marker => marker.setMap(null));
           if (newMap) {
-            newMap.setOptions({ mapTypeId: 'roadmap' });
+            newMap.setOptions({});
           }
         };
       } catch (error) {
@@ -177,7 +150,7 @@ const Home = () => {
     };
 
     initMap();
-  }, []); // Empty dependency array to prevent re-renders
+  }, [properties]);
 
   const toggleFavorite = (id) => {
     setFavorites(prev => ({ ...prev, [id]: !prev[id] }));

@@ -43,7 +43,7 @@ const LandlordDashboard = () => {
     setLoading(true);
     try {
       const userData = JSON.parse(localStorage.getItem('user'));
-      const response = await axios.get(`/api/landlord/dashboard/${userData.userId}`);
+      const response = await axios.get(`/landlord/dashboard/${userData.userId}`);
       setDashboardData(response.data);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);

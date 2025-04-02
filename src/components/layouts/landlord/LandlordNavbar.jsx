@@ -135,7 +135,7 @@ const LandlordNavbar = ({ toggleSidebar, isSidebarOpen }) => {
           <Button
             color="inherit"
             component={Link}
-            to="/landlord/home"
+            to="/home"
             sx={{
               textTransform: 'none',
               color: theme.palette.text.primary,
@@ -149,7 +149,7 @@ const LandlordNavbar = ({ toggleSidebar, isSidebarOpen }) => {
           <Button
             color="inherit"
             component={Link}
-            to="/landlord/properties"
+            to="/properties"
             sx={{
               textTransform: 'none',
               color: theme.palette.text.primary,

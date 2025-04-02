@@ -28,6 +28,7 @@ import AuthDebugger from './components/common/AuthDebugger'
 import { isLoggedIn, isUserType } from './utils/auth'
 import PropertyListingPage from './components/common/PropertList'
 import LandlordProperties from './components/layouts/landlord/LandlordProperties'
+import PropertyDetails from './components/property/PropertyDetails'
 
 // Protected route component
 const ProtectedRoute = ({ children, allowedUserTypes }) => {
@@ -61,8 +62,7 @@ function App() {
             <Route path='/login' element={<Login/>}></Route>
             <Route path='/signup' element={<Signup/>}></Route>
             <Route path='/terms' element={<TermsAndConditions/>}></Route>
-            <Route path='
-            ' element={<Home/>}></Route>
+            <Route path='/home' element={<Home/>}></Route>
             <Route path='/properties' element={<PropertyListingPage/>}></Route>
             <Route path='/aboutus' element={<AboutUs/>}></Route>
             <Route path='/contactus' element={<ContactUs/>}></Route>
@@ -111,6 +111,9 @@ function App() {
             
             {/* Sample route - should be protected or removed in production */}
             <Route path='/sample' element={<Sample/>}></Route>
+            
+            {/* Property Details route */}
+            <Route path='/property/:id' element={<PropertyDetails/>}></Route>
             
             {/* Catch-all route */}
             <Route path="*" element={<Navigate to="/" replace />} />
