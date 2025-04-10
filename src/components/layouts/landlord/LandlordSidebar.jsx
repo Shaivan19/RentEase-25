@@ -81,6 +81,12 @@ const LandlordSidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
   const [openMenus, setOpenMenus] = useState({});
 
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+  console.log("User Data:", user);
+  
+  const userInitials = user.name ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase() : 'L';
+  console.log("User Initials:", userInitials);
+
   const handleMenuClick = (title) => {
     setOpenMenus((prev) => ({
       ...prev,
@@ -125,14 +131,14 @@ const LandlordSidebar = ({ isOpen, onClose }) => {
             border: `2px solid ${theme.palette.primary.main}`,
           }}
         >
-          JD
+          {userInitials}
         </Avatar>
         <Box sx={{ flexGrow: 1 }}>
           <Typography variant="subtitle1" fontWeight={600}>
-            John Doe
+          {user.username || "Landlord"}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Landlord
+          {user.userType?.charAt(0).toUpperCase() + user.userType?.slice(1) || 'Landlord'}
           </Typography>
         </Box>
         {isMobile && (

@@ -60,8 +60,20 @@ const Navbar = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const allowedPages = ["/home", "/login", "/signup", "/contactus", "/", "/properties", "/aboutus"];
-  if (!allowedPages.includes(location.pathname)) return null;
+  const allowedPages = [
+    "/home", 
+    "/login", 
+    "/signup", 
+    "/contactus", 
+    "/", 
+    "/properties", 
+    "/aboutus",
+    "/property/:id",
+    "/property/*"
+  ];
+
+  if (!allowedPages.includes(location.pathname) && 
+      !location.pathname.startsWith('/property/')) return null;
 
   useEffect(() => {
     try {

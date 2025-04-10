@@ -21,10 +21,11 @@ import {
   Divider,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import DeleteIcon from "@mui/icons-material/Delete";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const propertyTypes = ["Apartment", "House", "Villa", "Studio", "Commercial"];
 const amenitiesList = ["WiFi", "Parking", "Swimming Pool", "Gym", "Security", "Garden"];
@@ -61,10 +62,72 @@ const AddProperty = () => {
       zipCode: "",
       country: "",
     },
+    landArea:{
+      value:'',
+      unit:'sqft',
+    },
+    constructionYear:'',
+    nearbyFacilities:[],
   });
+
+  const areaUnits = ['sqft', 'sqm', 'acres', 'hectares'];
+  const facilityTypes = [
+  'School',
+  'Hospital',
+  'Shopping Mall',
+  'Park',
+  'Metro Station',
+  'Bus Stop',
+  'Restaurant',
+  'Bank',
+  'Other'
+];
 
   const [previewImages, setPreviewImages] = useState([]);
   const [user, setUser] = useState(null);
+
+  const handleAddFacility = () => {
+    setPropertyData(prev => ({
+      ...prev,
+      nearbyFacilities: [
+        ...prev.nearbyFacilities,
+        {
+          name: '',
+          distance: { value: '', unit: 'km' },
+          type: 'Other'
+        }
+      ]
+    }));
+  };
+
+  const handleRemoveFacility = (index) => {
+    setPropertyData(prev => ({
+      ...prev,
+      nearbyFacilities: prev.nearbyFacilities.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleFacilityChange = (index, field, value) => {
+    setPropertyData(prev => ({
+      ...prev,
+      nearbyFacilities: prev.nearbyFacilities.map((facility, i) => {
+        if (i === index) {
+          if (field.includes('.')) {
+            const [parent, child] = field.split('.');
+            return {
+              ...facility,
+              [parent]: {
+                ...facility[parent],
+                [child]: value
+              }
+            };
+          }
+          return { ...facility, [field]: value };
+        }
+        return facility;
+      })
+    }));
+  };
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -101,12 +164,18 @@ const AddProperty = () => {
   };
 
   const handleImageChange = (e) => {
-    const filesArray = Array.from(e.target.files);
-    setPropertyData({ ...propertyData, images: filesArray });
+    const files = Array.from(e.target.files);
+    const validFiles = files.filter(file => file.type.startsWith('image/'));
     
-    // Create preview URLs
-    const previewUrls = filesArray.map(file => URL.createObjectURL(file));
+    if (validFiles.length !== files.length) {
+      alert("Some files were not images and were excluded.");
+    }
+    
+    if (validFiles.length > 0) {
+      setPropertyData({ ...propertyData, images: validFiles });
+      const previewUrls = validFiles.map(file => URL.createObjectURL(file));
     setPreviewImages(previewUrls);
+    }
   };
 
   const removeImage = (index) => {
@@ -116,11 +185,27 @@ const AddProperty = () => {
     setPreviewImages(newPreviews);
   };
 
+  useEffect(() => {
+    return () => {
+      previewImages.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [previewImages]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!user) {
       alert("User not found. Please log in again.");
+      return;
+    }
+
+    if (!propertyData.landArea.value || !propertyData.constructionYear) {
+      alert("Please fill in all required fields including land area and construction year.");
+      return;
+    }
+
+    if (propertyData.nearbyFacilities.some(facility => !facility.name || !facility.distance.value)) {
+      alert("Please fill in all facility details or remove incomplete entries.");
       return;
     }
 
@@ -136,20 +221,32 @@ const AddProperty = () => {
     formData.append("furnished", propertyData.furnished.toString());
     formData.append("availableFrom", propertyData.availableFrom.toISOString().split("T")[0]);
     
-    // Append address fields
     formData.append("address[street]", propertyData.address.street);
     formData.append("address[city]", propertyData.address.city);
     formData.append("address[state]", propertyData.address.state);
     formData.append("address[zipCode]", propertyData.address.zipCode);
     formData.append("address[country]", propertyData.address.country);
 
-    // Append amenities as a comma-separated string
     formData.append("amenities", propertyData.amenities.join(','));
 
-    // Append images
     for (let i = 0; i < propertyData.images.length; i++) {
       formData.append("images", propertyData.images[i]);
     }
+
+    formData.append("landArea[value]", Number(propertyData.landArea.value));
+    formData.append("landArea[unit]", propertyData.landArea.unit);
+
+    // Construction Year
+    formData.append("constructionYear", Number(propertyData.constructionYear));
+
+    // Nearby Facilities
+    propertyData.nearbyFacilities.forEach((facility, index) => {
+      formData.append(`nearbyFacilities[${index}][name]`, facility.name);
+      formData.append(`nearbyFacilities[${index}][type]`, facility.type);
+      formData.append(`nearbyFacilities[${index}][distance][value]`, Number(facility.distance.value));
+      formData.append(`nearbyFacilities[${index}][distance][unit]`, facility.distance.unit);
+    });
+
 
     try {
       const response = await axios.post("/addproperties", formData, {
@@ -157,7 +254,6 @@ const AddProperty = () => {
       });
       alert("Property added successfully!");
       console.log(response.data);
-      // Reset form or redirect
       window.location.href = "/properties";
     } catch (error) {
       console.error("Error adding property:", error);
@@ -224,7 +320,6 @@ const AddProperty = () => {
               />
             </Grid>
 
-            {/* Address Fields */}
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom>Address Details</Typography>
             </Grid>
@@ -307,7 +402,6 @@ const AddProperty = () => {
                   label="Available From"
                   value={propertyData.availableFrom}
                   onChange={(newValue) => setPropertyData({ ...propertyData, availableFrom: newValue })}
-                  renderInput={(params) => <TextField {...params} fullWidth variant="outlined" />}
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                 />
               </LocalizationProvider>
@@ -405,6 +499,128 @@ const AddProperty = () => {
                 )}
               </Box>
             </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Land Area"
+                name="landArea.value"
+                type="number"
+                fullWidth
+                value={propertyData.landArea.value}
+                onChange={handleChange}
+                required
+                variant="outlined"
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                InputProps={{
+                  endAdornment: (
+                    <Select
+                      value={propertyData.landArea.unit}
+                      onChange={(e) => handleChange({
+                        target: { name: 'landArea.unit', value: e.target.value }
+                      })}
+                      sx={{ ml: 1, minWidth: 80 }}
+                    >
+                      {areaUnits.map(unit => (
+                        <MenuItem key={unit} value={unit}>{unit}</MenuItem>
+                      ))}
+                    </Select>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Construction Year"
+                name="constructionYear"
+                type="number"
+                fullWidth
+                value={propertyData.constructionYear}
+                onChange={handleChange}
+                required
+                variant="outlined"
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                inputProps={{
+                  min: 1800,
+                  max: new Date().getFullYear()
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Nearby Facilities</Typography>
+              {propertyData.nearbyFacilities.map((facility, index) => (
+                <Box key={index} sx={{ mb: 2, p: 2, border: '1px solid #e0e0e0', borderRadius: 2 }}>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} md={3}>
+                      <TextField
+                        label="Facility Name"
+                        fullWidth
+                        value={facility.name}
+                        onChange={(e) => handleFacilityChange(index, 'name', e.target.value)}
+                        required
+                        variant="outlined"
+                        sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={3}>
+                      <TextField
+                        select
+                        label="Facility Type"
+                        fullWidth
+                        value={facility.type}
+                        onChange={(e) => handleFacilityChange(index, 'type', e.target.value)}
+                        required
+                        variant="outlined"
+                        sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                      >
+                        {facilityTypes.map(type => (
+                          <MenuItem key={type} value={type}>{type}</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <TextField
+                        label="Distance"
+                        type="number"
+                        fullWidth
+                        value={facility.distance.value}
+                        onChange={(e) => handleFacilityChange(index, 'distance.value', e.target.value)}
+                        required
+                        variant="outlined"
+                        sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                        InputProps={{
+                          endAdornment: (
+                            <Select
+                              value={facility.distance.unit}
+                              onChange={(e) => handleFacilityChange(index, 'distance.unit', e.target.value)}
+                              sx={{ ml: 1, minWidth: 60 }}
+                            >
+                              <MenuItem value="km">km</MenuItem>
+                              <MenuItem value="mi">mi</MenuItem>
+                            </Select>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={2}>
+                      <IconButton 
+                        onClick={() => handleRemoveFacility(index)} 
+                        color="error"
+                        sx={{ borderRadius: 2 }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Grid>
+                  </Grid>
+                </Box>
+              ))}
+              <Button
+                startIcon={<AddIcon />}
+                onClick={handleAddFacility}
+                variant="outlined"
+                sx={{ mt: 1, borderRadius: 2 }}
+              >
+                Add Facility
+              </Button>
+            </Grid>
             <Grid item xs={12}>
               <Button
                 variant="contained"
@@ -412,7 +628,7 @@ const AddProperty = () => {
                 type="submit"
                 fullWidth
                 size="large"
-                sx={{ borderRadius: 2, py: 1.5 }}//nirjnthb+bub=inrgnnefndn
+                sx={{ borderRadius: 2, py: 1.5 }}
               >
                 Add Property
               </Button>

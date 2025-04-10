@@ -1,34 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  IconButton,
-  Avatar,
-  Menu,
-  MenuItem,
-  Badge,
-  Tooltip,
-  Box,
-  useTheme,
-  useMediaQuery,
-  Divider,
-  ListItemIcon,
-  ListItemText,
-  InputBase,
-  Button,
-} from "@mui/material";
-import {
-  Notifications,
-  Menu as MenuIcon,
-  Logout,
-  Settings,
-  Person,
-  DarkMode,
-  LightMode,
-  Search,
-  AccountCircle,
-} from "@mui/icons-material";
+import {AppBar, Toolbar, Typography, IconButton, Avatar, Menu, MenuItem, Badge, Tooltip, Box, useTheme, useMediaQuery, Divider, ListItemIcon, ListItemText, InputBase, Button} from "@mui/material";
+import {Notifications, Menu as MenuIcon, Logout, Settings, Person, DarkMode, LightMode, Search, AccountCircle} from "@mui/icons-material";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { getCurrentUser } from "../../../utils/auth";
 

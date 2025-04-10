@@ -25,10 +25,12 @@ import AboutUs from './components/common/AboutUs'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import AuthDebugger from './components/common/AuthDebugger'
-import { isLoggedIn, isUserType } from './utils/auth'
+// import { isLoggedIn, isUserType } from './utils/auth'
 import PropertyListingPage from './components/common/PropertList'
 import LandlordProperties from './components/layouts/landlord/LandlordProperties'
 import PropertyDetails from './components/property/PropertyDetails'
+import TenantLayout from './components/layouts/tenant/TenantLayout'
+import { isLoggedIn, getUserType } from './utils/auth'
 
 // Protected route component
 const ProtectedRoute = ({ children, allowedUserTypes }) => {
@@ -37,7 +39,8 @@ const ProtectedRoute = ({ children, allowedUserTypes }) => {
   }
   
   // Check if user type is required and if user has that type
-  if (allowedUserTypes && !allowedUserTypes.includes(isUserType())) {
+  const userType = getUserType();
+  if (allowedUserTypes && !allowedUserTypes.includes(userType?.toLowerCase())) {
     return <Navigate to="/" />;
   }
   
@@ -69,13 +72,14 @@ function App() {
             
             {/* Tenant protected routes */}
             <Route 
-              path='/tenant/dashboard' 
+              path='/tenant' 
               element={
-                <ProtectedRoute role="tenant" allowedRoles={["tenant"]}>
-                  <TenantDashboard/>
+                <ProtectedRoute allowedUserTypes={["tenant"]}>
+                  <TenantLayout/>
                 </ProtectedRoute>
               }
             >
+              <Route path='dashboard' element={<TenantDashboard/>}></Route>
               <Route path='profile' element={<UserProfile/>}></Route>
             
             </Route>

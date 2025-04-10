@@ -53,10 +53,14 @@ const TenantNavbar = ({ toggleDrawer }) => {
     setAnchorEl(null);
   };
 
+  const handleDraweToggle =()=>{
+    toggleDrawer(true);
+  };
+
   return (
     <AppBar position="fixed" sx={{ zIndex: 1201, background: "linear-gradient(to right, #0072ff, #00c6ff)" }}>
       <Toolbar>
-        <IconButton edge="start" color="inherit" onClick={toggleDrawer(true)}>
+        <IconButton edge="start" color="inherit" onClick={handleDraweToggle}>
           <MenuIcon />
         </IconButton>
         <Typography variant="h6" sx={{ flexGrow: 1, cursor: "pointer" }} onClick={() => navigate("/home")}>
@@ -118,7 +122,7 @@ const TenantNavbar = ({ toggleDrawer }) => {
           onClose={handleMenuClose}
           sx={{ mt: 5 }}
         >
-          <MenuItem onClick={() => { navigate("/"); handleMenuClose(); }}>Profile</MenuItem>
+          <MenuItem onClick={() => { navigate("/tenant/profile"); handleMenuClose(); }}>Profile</MenuItem>
           <MenuItem onClick={() => { localStorage.removeItem("user"); navigate("/login"); handleMenuClose(); }}>Logout</MenuItem>
         </Menu>
       </Toolbar>

@@ -44,7 +44,7 @@ const Login = () => {
           } else if (userType === "landlord") {
             navigate("/landlord/dashboard");
           } else if (userType === "admin") {
-            navigate("/admin/dashboard");
+            navigate("/user");
           } else {
             navigate("/home");
           }
