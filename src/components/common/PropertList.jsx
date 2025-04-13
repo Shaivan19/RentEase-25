@@ -76,6 +76,7 @@ const FavoriteButton = styled(IconButton)(({ theme }) => ({
   top: theme?.spacing?.(2) || '16px',
   right: theme?.spacing?.(2) || '16px',
   backgroundColor: 'rgba(255,255,255,0.9)',
+  zIndex: 2,
   '&:hover': {
     backgroundColor: 'rgba(255,255,255,1)'
   }
@@ -411,6 +412,21 @@ const PropertyListingPage = () => {
               <Grid item xs={12} sm={6} md={4} key={property._id}>
                 <PropertyCard>
                   <Box sx={{ position: 'relative' }}>
+                    <FavoriteButton 
+                      onClick={() => toggleFavorite(property._id)}
+                      sx={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255, 255, 255, 1)'
+                        }
+                      }}
+                    >
+                      {favorites.includes(property._id) ? (
+                        <Favorite color="error" />
+                      ) : (
+                        <FavoriteBorder />
+                      )}
+                    </FavoriteButton>
                     {property.images.length > 0 ? (
                       <Carousel
                         animation="slide"
@@ -454,21 +470,6 @@ const PropertyListingPage = () => {
                       />
                     )}
                     <PriceTag>₹{property.price.toLocaleString()}/mo</PriceTag>
-                    <FavoriteButton 
-                      onClick={() => toggleFavorite(property._id)}
-                      sx={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                        '&:hover': {
-                          backgroundColor: 'rgba(255, 255, 255, 1)'
-                        }
-                      }}
-                    >
-                      {favorites.includes(property._id) ? (
-                        <Favorite color="error" />
-                      ) : (
-                        <FavoriteBorder />
-                      )}
-                    </FavoriteButton>
                   </Box>
 
                   <CardContent>

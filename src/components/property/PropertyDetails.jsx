@@ -71,6 +71,8 @@ import {
   CompareArrows,
   WbSunny,
   AttachMoney,
+  Favorite as FavoriteIcon,
+  FavoriteBorder as FavoriteBorderIcon,
 } from '@mui/icons-material';
 import { isLoggedIn } from '../../utils/auth';
 import Navbar from '../layouts/Navbar';
@@ -114,6 +116,7 @@ const PropertyDetails = () => {
   const [propertyScores, setPropertyScores] = useState(null);
   const [sunPosition, setSunPosition] = useState({ x: 50, y: 50 });
   const [showCostComparison, setShowCostComparison] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   // Define fetchPropertyDetails outside useEffect
   const fetchPropertyDetails = async () => {
@@ -367,6 +370,24 @@ const PropertyDetails = () => {
     setSunPosition(timeMap[time]);
   };
 
+  const handleFavoriteClick = async () => {
+    try {
+      // Toggle favorite status
+      setIsFavorite(!isFavorite);
+      
+      // Here you would typically make an API call to update the favorite status
+      // For example:
+      // await axios.post(`/properties/${id}/favorite`, { isFavorite: !isFavorite });
+      
+      // For now, we'll just show a success message
+      // You can add a snackbar or toast notification here
+    } catch (error) {
+      console.error('Error updating favorite status:', error);
+      // Revert the state if there's an error
+      setIsFavorite(!isFavorite);
+    }
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
@@ -545,9 +566,24 @@ const PropertyDetails = () => {
             {/* Property Details */}
             <Grid item xs={12} md={8}>
               <Paper elevation={3} sx={{ p: 3 }}>
-                <Typography variant="h4" gutterBottom>
-                  {property.title}
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                  <Typography variant="h4" gutterBottom>
+                    {property.title}
+                  </Typography>
+                  <IconButton 
+                    onClick={handleFavoriteClick}
+                    sx={{ 
+                      color: isFavorite ? 'error.main' : 'text.secondary',
+                      '&:hover': {
+                        color: 'error.main',
+                        transform: 'scale(1.1)',
+                        transition: 'transform 0.2s'
+                      }
+                    }}
+                  >
+                    {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                  </IconButton>
+                </Box>
                 <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Chip 
                     label={property.status} 
