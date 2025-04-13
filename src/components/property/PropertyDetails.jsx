@@ -68,12 +68,35 @@ import {
   Stars,
   Home,
   DirectionsWalk as WalkIcon,
+  CompareArrows,
+  WbSunny,
+  AttachMoney,
 } from '@mui/icons-material';
 import { isLoggedIn } from '../../utils/auth';
 import Navbar from '../layouts/Navbar';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { Radar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+  Legend
+} from 'chart.js';
+
+// Register ChartJS components
+ChartJS.register(
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+  Legend
+);
 
 const PropertyDetails = () => {
   const { id } = useParams();
@@ -88,6 +111,9 @@ const PropertyDetails = () => {
   const [bookVisitDialogOpen, setBookVisitDialogOpen] = useState(false);
   const [rentDialogOpen, setRentDialogOpen] = useState(false);
   const [visitDate, setVisitDate] = useState(null);
+  const [propertyScores, setPropertyScores] = useState(null);
+  const [sunPosition, setSunPosition] = useState({ x: 50, y: 50 });
+  const [showCostComparison, setShowCostComparison] = useState(false);
 
   // Define fetchPropertyDetails outside useEffect
   const fetchPropertyDetails = async () => {
@@ -301,6 +327,44 @@ const PropertyDetails = () => {
         </Stack>
       </>
     );
+  };
+
+  const calculateLocationScore = (property) => {
+    // Example scoring logic based on nearby facilities
+    const facilitiesCount = property.nearbyFacilities?.length || 0;
+    return Math.min(facilitiesCount * 20, 100);
+  };
+
+  const calculateAmenitiesScore = (property) => {
+    // Example scoring logic based on amenities
+    const amenitiesCount = property.amenities?.length || 0;
+    return Math.min(amenitiesCount * 15, 100);
+  };
+
+  const calculateValueScore = (property) => {
+    // Example scoring logic based on price and area
+    const pricePerSqFt = property.price / (property.landArea?.value || 1);
+    return Math.min(100 - (pricePerSqFt / 100), 100);
+  };
+
+  const calculateConnectivityScore = (property) => {
+    // Example scoring logic based on nearby transport facilities
+    const transportFacilities = property.nearbyFacilities?.filter(
+      f => ['Metro Station', 'Bus Stop'].includes(f.type)
+    ).length || 0;
+    return Math.min(transportFacilities * 25, 100);
+  };
+
+  const updateSunPosition = (time) => {
+    // More realistic sun positions
+    const timeMap = {
+      '6 AM': { x: 10, y: 70 },  // Rising sun
+      '9 AM': { x: 30, y: 40 },  // Morning
+      '12 PM': { x: 50, y: 20 }, // Noon
+      '3 PM': { x: 70, y: 40 },  // Afternoon
+      '6 PM': { x: 90, y: 70 }   // Setting sun
+    };
+    setSunPosition(timeMap[time]);
   };
 
   if (loading) {
@@ -837,6 +901,273 @@ const PropertyDetails = () => {
                   </Typography>
                   {renderOwnerInfo()}
                 </Paper>
+              </Paper>
+            </Grid>
+
+            {/* Property Score Radar Chart */}
+            <Grid item xs={12}>
+              <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+                <Typography variant="h6" gutterBottom sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 1,
+                  color: 'primary.main',
+                  fontWeight: 'bold'
+                }}>
+                  <CompareArrows />
+                  Property Score Analysis
+                </Typography>
+                <Box sx={{ height: 300, mt: 2 }}>
+                  <Radar
+                    data={{
+                      labels: ['Location', 'Amenities', 'Value', 'Condition', 'Safety', 'Connectivity'],
+                      datasets: [{
+                        label: 'Property Score',
+                        data: [
+                          calculateLocationScore(property),
+                          calculateAmenitiesScore(property),
+                          calculateValueScore(property),
+                          95, // Example condition score
+                          90, // Example safety score
+                          calculateConnectivityScore(property)
+                        ],
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                        pointHoverRadius: 8,
+                      }]
+                    }}
+                    options={{
+                      scales: {
+                        r: {
+                          beginAtZero: true,
+                          max: 100,
+                          ticks: {
+                            stepSize: 20
+                          }
+                        }
+                      },
+                      plugins: {
+                        legend: {
+                          display: false
+                        }
+                      }
+                    }}
+                  />
+                </Box>
+              </Paper>
+            </Grid>
+
+            {/* Sun Position Visualizer with improved visuals */}
+            <Grid item xs={12} md={6}>
+              <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+                <Typography variant="h6" gutterBottom sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 1,
+                  color: 'primary.main',
+                  fontWeight: 'bold'
+                }}>
+                  <WbSunny />
+                  Natural Light Analysis
+                </Typography>
+                <Box sx={{ 
+                  position: 'relative', 
+                  height: 300, 
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  overflow: 'hidden',
+                  background: 'linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%)', // Sky gradient
+                  boxShadow: 'inset 0 0 50px rgba(255,255,255,0.5)'
+                }}>
+                  {/* House Silhouette */}
+                  <Box sx={{
+                    position: 'absolute',
+                    bottom: '20%',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '150px',
+                    height: '100px',
+                    bgcolor: '#2C3E50',
+                    clipPath: 'polygon(0% 100%, 0% 40%, 50% 0%, 100% 40%, 100% 100%)',
+                    zIndex: 2
+                  }} />
+                  
+                  {/* Sun */}
+                  <Box sx={{
+                    position: 'absolute',
+                    width: '60px',
+                    height: '60px',
+                    transform: 'translate(-50%, -50%)',
+                    left: `${sunPosition.x}%`,
+                    top: `${sunPosition.y}%`,
+                    zIndex: 1,
+                  }}>
+                    {/* Inner glow */}
+                    <Box sx={{
+                      position: 'absolute',
+                      width: '100%',
+                      height: '100%',
+                      background: '#FDB813',
+                      borderRadius: '50%',
+                      boxShadow: `
+                        0 0 60px 30px #fff,
+                        0 0 100px 60px #f0f,
+                        0 0 140px 90px #0ff
+                      `,
+                      opacity: 0.7,
+                      transition: 'all 0.5s ease'
+                    }} />
+                    
+                    {/* Sun core */}
+                    <Box sx={{
+                      position: 'absolute',
+                      width: '100%',
+                      height: '100%',
+                      background: 'radial-gradient(circle, #FDB813 0%, #FDB813 35%, rgba(253,184,19,0) 100%)',
+                      borderRadius: '50%',
+                      animation: 'pulse 2s infinite'
+                    }} />
+                  </Box>
+
+                  {/* Ground */}
+                  <Box sx={{
+                    position: 'absolute',
+                    bottom: 0,
+                    width: '100%',
+                    height: '20%',
+                    background: 'linear-gradient(180deg, #4CAF50 0%, #2E7D32 100%)',
+                    zIndex: 1
+                  }} />
+
+                  {/* Controls */}
+                  <Box sx={{ 
+                    position: 'absolute',
+                    bottom: 16,
+                    left: 0,
+                    right: 0,
+                    zIndex: 3,
+                    px: 2
+                  }}>
+                    <Typography variant="subtitle2" align="center" gutterBottom sx={{ color: 'white', textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
+                      Sun Position Throughout the Day
+                    </Typography>
+                    <Stack 
+                      direction="row" 
+                      spacing={1} 
+                      justifyContent="center" 
+                      sx={{ mt: 1 }}
+                    >
+                      {['6 AM', '9 AM', '12 PM', '3 PM', '6 PM'].map((time) => (
+                        <Button
+                          key={time}
+                          size="small"
+                          variant="contained"
+                          onClick={() => updateSunPosition(time)}
+                          sx={{
+                            bgcolor: 'rgba(255,255,255,0.9)',
+                            color: 'primary.main',
+                            '&:hover': {
+                              bgcolor: 'rgba(255,255,255,1)',
+                            },
+                            minWidth: 'auto',
+                            px: 1
+                          }}
+                        >
+                          {time}
+                        </Button>
+                      ))}
+                    </Stack>
+                  </Box>
+                </Box>
+                
+                {/* Add this to your existing styles */}
+                <style>
+                  {`
+                    @keyframes pulse {
+                      0% { transform: scale(1); }
+                      50% { transform: scale(1.1); }
+                      100% { transform: scale(1); }
+                    }
+                  `}
+                </style>
+              </Paper>
+            </Grid>
+
+            {/* Smart Cost Comparison */}
+            <Grid item xs={12} md={6}>
+              <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+                <Typography variant="h6" gutterBottom sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 1,
+                  color: 'primary.main',
+                  fontWeight: 'bold'
+                }}>
+                  <AttachMoney />
+                  Smart Cost Analysis
+                </Typography>
+                <Box sx={{ mt: 2 }}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                      <Paper 
+                        variant="outlined" 
+                        sx={{ 
+                          p: 2, 
+                          bgcolor: 'background.default',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <Box>
+                          <Typography variant="subtitle1">Monthly Cost</Typography>
+                          <Typography variant="h4" color="primary">
+                            ₹{property.price.toLocaleString()}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="body2" color="text.secondary">
+                            vs Market Average
+                          </Typography>
+                          <Typography 
+                            variant="h6" 
+                            color={property.price < 50000 ? "success.main" : "error.main"}
+                          >
+                            {property.price < 50000 ? "−12%" : "+8%"}
+                          </Typography>
+                        </Box>
+                      </Paper>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Stack spacing={1}>
+                        {[
+                          { label: 'Utilities (est.)', cost: property.price * 0.1 },
+                          { label: 'Maintenance', cost: property.price * 0.05 },
+                          { label: 'Security Deposit', cost: property.price },
+                        ].map((item) => (
+                          <Box 
+                            key={item.label}
+                            sx={{ 
+                              display: 'flex', 
+                              justifyContent: 'space-between',
+                              p: 1,
+                              borderBottom: '1px solid',
+                              borderColor: 'divider'
+                            }}
+                          >
+                            <Typography variant="body2">{item.label}</Typography>
+                            <Typography variant="body2">
+                              ₹{item.cost.toLocaleString()}
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Stack>
+                    </Grid>
+                  </Grid>
+                </Box>
               </Paper>
             </Grid>
           </Grid>
