@@ -19,6 +19,8 @@ import {
   Chip,
   Stack,
   Divider,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -26,6 +28,7 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useParams, useNavigate } from "react-router-dom";
 
 const propertyTypes = ["Apartment", "House", "Villa", "Studio", "Commercial"];
 const amenitiesList = ["WiFi", "Parking", "Swimming Pool", "Gym", "Security", "Garden"];
@@ -43,6 +46,9 @@ const VisuallyHiddenInput = styled("input")({
 });
 
 const AddProperty = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false);
   const [propertyData, setPropertyData] = useState({
     title: "",
     description: "",
@@ -62,12 +68,12 @@ const AddProperty = () => {
       zipCode: "",
       country: "",
     },
-    landArea:{
-      value:'',
-      unit:'sqft',
+    landArea: {
+      value: "",
+      unit: "sqft",
     },
-    constructionYear:'',
-    nearbyFacilities:[],
+    constructionYear: "",
+    nearbyFacilities: [],
   });
 
   const areaUnits = ['sqft', 'sqm', 'acres', 'hectares'];
@@ -85,6 +91,8 @@ const AddProperty = () => {
 
   const [previewImages, setPreviewImages] = useState([]);
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleAddFacility = () => {
     setPropertyData(prev => ({
@@ -139,6 +147,56 @@ const AddProperty = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const fetchPropertyData = async () => {
+      if (id) {
+        try {
+          setLoading(true);
+          setIsEditing(true);
+          const response = await axios.get(`/properties/${id}`);
+          const property = response.data;
+          
+          setPropertyData({
+            title: property.title || "",
+            description: property.description || "",
+            price: property.price || "",
+            location: property.location || "",
+            propertyType: property.propertyType || "",
+            bedrooms: property.bedrooms || "",
+            bathrooms: property.bathrooms || "",
+            furnished: property.furnished || false,
+            availableFrom: new Date(property.availableFrom) || new Date(),
+            amenities: property.amenities || [],
+            address: {
+              street: property.address?.street || "",
+              city: property.address?.city || "",
+              state: property.address?.state || "",
+              zipCode: property.address?.zipCode || "",
+              country: property.address?.country || "",
+            },
+            landArea: property.landArea || {
+              value: "",
+              unit: "sqft",
+            },
+            constructionYear: property.constructionYear || "",
+            nearbyFacilities: property.nearbyFacilities || [],
+          });
+
+          if (property.images && property.images.length > 0) {
+            setPreviewImages(property.images);
+          }
+        } catch (error) {
+          console.error("Error fetching property:", error);
+          setError("Failed to load property data");
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchPropertyData();
+  }, [id]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name.includes('.')) {
@@ -172,17 +230,22 @@ const AddProperty = () => {
     }
     
     if (validFiles.length > 0) {
-      setPropertyData({ ...propertyData, images: validFiles });
-      const previewUrls = validFiles.map(file => URL.createObjectURL(file));
-    setPreviewImages(previewUrls);
+      setPropertyData(prev => ({
+        ...prev,
+        images: [...prev.images, ...validFiles]
+      }));
+      
+      const newPreviewUrls = validFiles.map(file => URL.createObjectURL(file));
+      setPreviewImages(prev => [...prev, ...newPreviewUrls]);
     }
   };
 
   const removeImage = (index) => {
-    const newImages = propertyData.images.filter((_, i) => i !== index);
-    const newPreviews = previewImages.filter((_, i) => i !== index);
-    setPropertyData({ ...propertyData, images: newImages });
-    setPreviewImages(newPreviews);
+    setPropertyData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+    setPreviewImages(prev => prev.filter((_, i) => i !== index));
   };
 
   useEffect(() => {
@@ -199,6 +262,18 @@ const AddProperty = () => {
       return;
     }
 
+    if (propertyData.nearbyFacilities.length > 0) {
+      const invalidFacilities = propertyData.nearbyFacilities.filter(
+        facility => !facility.name || !facility.type || !facility.distance.value
+      );
+      
+      if (invalidFacilities.length > 0) {
+        alert("Please complete all facility details or remove incomplete entries.");
+        return;
+      }
+    }
+  
+
     if (!propertyData.landArea.value || !propertyData.constructionYear) {
       alert("Please fill in all required fields including land area and construction year.");
       return;
@@ -210,6 +285,8 @@ const AddProperty = () => {
     }
 
     const formData = new FormData();
+    
+    // Basic property details
     formData.append("title", propertyData.title);
     formData.append("description", propertyData.description);
     formData.append("price", propertyData.price);
@@ -221,51 +298,93 @@ const AddProperty = () => {
     formData.append("furnished", propertyData.furnished.toString());
     formData.append("availableFrom", propertyData.availableFrom.toISOString().split("T")[0]);
     
+    // Address
     formData.append("address[street]", propertyData.address.street);
     formData.append("address[city]", propertyData.address.city);
     formData.append("address[state]", propertyData.address.state);
     formData.append("address[zipCode]", propertyData.address.zipCode);
     formData.append("address[country]", propertyData.address.country);
 
+    // Amenities
     formData.append("amenities", propertyData.amenities.join(','));
 
-    for (let i = 0; i < propertyData.images.length; i++) {
-      formData.append("images", propertyData.images[i]);
+    // Convert landArea to area in square feet and append
+    let areaInSqFt = propertyData.landArea.value;
+    if (propertyData.landArea.unit === 'sqm') {
+      areaInSqFt = propertyData.landArea.value * 10.764;
+    } else if (propertyData.landArea.unit === 'acres') {
+      areaInSqFt = propertyData.landArea.value * 43560;
+    } else if (propertyData.landArea.unit === 'hectares') {
+      areaInSqFt = propertyData.landArea.value * 107639;
     }
+    formData.append("area", Math.round(areaInSqFt));
 
-    formData.append("landArea[value]", Number(propertyData.landArea.value));
-    formData.append("landArea[unit]", propertyData.landArea.unit);
+    // Keep the original landArea for frontend display purposes
+    formData.append("landArea", JSON.stringify(propertyData.landArea));
+    
+    // Construction year and nearby facilities
+    formData.append("constructionYear", propertyData.constructionYear);
+    formData.append("nearbyFacilities", JSON.stringify(propertyData.nearbyFacilities));
 
-    // Construction Year
-    formData.append("constructionYear", Number(propertyData.constructionYear));
-
-    // Nearby Facilities
-    propertyData.nearbyFacilities.forEach((facility, index) => {
-      formData.append(`nearbyFacilities[${index}][name]`, facility.name);
-      formData.append(`nearbyFacilities[${index}][type]`, facility.type);
-      formData.append(`nearbyFacilities[${index}][distance][value]`, Number(facility.distance.value));
-      formData.append(`nearbyFacilities[${index}][distance][unit]`, facility.distance.unit);
-    });
-
+    // Images
+    if (propertyData.images.length > 0) {
+      propertyData.images.forEach(image => {
+        if (image instanceof File) {
+          formData.append("images", image);
+        }
+      });
+    }
 
     try {
-      const response = await axios.post("/addproperties", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      alert("Property added successfully!");
-      console.log(response.data);
-      window.location.href = "/properties";
+      setLoading(true);
+      let response;
+
+      if (isEditing) {
+        response = await axios.put(`/properties/${id}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        alert("Property updated successfully!");
+      } else {
+        response = await axios.post("/addproperties", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        alert("Property added successfully!");
+      }
+      
+      navigate("/landlord/properties");
     } catch (error) {
-      console.error("Error adding property:", error);
-      alert(error.response?.data?.error || "Error adding property. Please try again.");
+      console.error("Error saving property:", error);
+      setError(error.response?.data?.error || "Error saving property. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <Container maxWidth="md">
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="md">
+        <Alert severity="error" sx={{ mt: 4 }}>
+          {error}
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="md">
       <Paper elevation={3} sx={{ p: 4, mt: 4, mb: 4 }}>
         <Typography variant="h4" gutterBottom sx={{ color: "primary.main", fontWeight: "bold" }}>
-          Add New Property
+          {isEditing ? "Edit Property" : "Add New Property"}
         </Typography>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>
@@ -630,7 +749,7 @@ const AddProperty = () => {
                 size="large"
                 sx={{ borderRadius: 2, py: 1.5 }}
               >
-                Add Property
+                {isEditing ? "Update Property" : "Add Property"}
               </Button>
             </Grid>
           </Grid>

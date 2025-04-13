@@ -41,7 +41,14 @@ import {
   DirectionsCar,
   DirectionsTransit,
   DirectionsWalk,
+  EventAvailable,
+  Key,
+  ArrowBack,
+  ArrowForward,
 } from '@mui/icons-material';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 const property = {
   id: 1,
@@ -87,6 +94,9 @@ const PropertyDetails = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [tabValue, setTabValue] = useState(0);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [bookVisitDialogOpen, setBookVisitDialogOpen] = useState(false);
+  const [rentDialogOpen, setRentDialogOpen] = useState(false);
+  const [visitDate, setVisitDate] = useState(null);
   const [contactForm, setContactForm] = useState({
     name: '',
     email: '',
@@ -109,6 +119,14 @@ const PropertyDetails = () => {
     event.preventDefault();
     // Add contact form submission logic here
     setContactDialogOpen(false);
+  };
+
+  const handlePrevImage = () => {
+    setSelectedImage((prev) => (prev > 0 ? prev - 1 : property.images.length - 1));
+  };
+
+  const handleNextImage = () => {
+    setSelectedImage((prev) => (prev < property.images.length - 1 ? prev + 1 : 0));
   };
 
   const ContactDialog = () => (
@@ -188,79 +206,152 @@ const PropertyDetails = () => {
         pt: '64px',
         bgcolor: 'background.default'
       }}>
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Container 
+          maxWidth={false}
+          sx={{ 
+            py: 4,
+            px: { xs: 2, sm: 4, md: 6, lg: 8 },
+            maxWidth: '1600px',
+            mx: 'auto',
+          }}
+        >
           <Grid container spacing={4}>
             {/* Image Gallery */}
             <Grid item xs={12} md={8}>
-              <Box sx={{ position: 'relative', mb: 2 }}>
-                <img
-                  src={property.images[selectedImage]}
-                  alt={property.title}
-                  style={{
-                    width: '100%',
-                    height: '400px',
-                    objectFit: 'cover',
-                    borderRadius: theme.shape.borderRadius,
-                  }}
-                />
+              <Box sx={{ position: 'relative', mb: 2, width: '100%' }}>
                 <Box
                   sx={{
-                    position: 'absolute',
-                    top: 16,
-                    right: 16,
-                    display: 'flex',
-                    gap: 1,
+                    position: 'relative',
+                    width: '100%',
+                    height: { xs: '300px', md: '500px' },
+                    borderRadius: 2,
+                    overflow: 'hidden',
                   }}
                 >
+                  <img
+                    src={property.images[selectedImage]}
+                    alt={property.title}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      backgroundColor: 'rgba(0,0,0,0.03)',
+                    }}
+                  />
+                  
                   <IconButton
                     sx={{
-                      bgcolor: 'white',
-                      '&:hover': { bgcolor: 'white' },
+                      position: 'absolute',
+                      left: 16,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      bgcolor: 'rgba(255,255,255,0.8)',
+                      '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+                      boxShadow: 2,
                     }}
+                    onClick={handlePrevImage}
                   >
-                    <Share />
+                    <ArrowBack />
                   </IconButton>
+                  
                   <IconButton
                     sx={{
-                      bgcolor: 'white',
-                      '&:hover': { bgcolor: 'white' },
+                      position: 'absolute',
+                      right: 16,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      bgcolor: 'rgba(255,255,255,0.8)',
+                      '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+                      boxShadow: 2,
+                    }}
+                    onClick={handleNextImage}
+                  >
+                    <ArrowForward />
+                  </IconButton>
+
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      bottom: 16,
+                      right: 16,
+                      bgcolor: 'rgba(0,0,0,0.6)',
+                      color: 'white',
+                      px: 2,
+                      py: 0.5,
+                      borderRadius: 1,
+                      fontSize: '0.875rem',
                     }}
                   >
-                    {property.isFavorite ? (
-                      <Favorite color="error" />
-                    ) : (
-                      <FavoriteBorder />
-                    )}
-                  </IconButton>
+                    {selectedImage + 1} / {property.images.length}
+                  </Box>
+
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 16,
+                      right: 16,
+                      display: 'flex',
+                      gap: 1,
+                    }}
+                  >
+                    <IconButton
+                      sx={{
+                        bgcolor: 'rgba(255,255,255,0.8)',
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+                      }}
+                    >
+                      <Share />
+                    </IconButton>
+                    <IconButton
+                      sx={{
+                        bgcolor: 'rgba(255,255,255,0.8)',
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+                      }}
+                    >
+                      {property.isFavorite ? (
+                        <Favorite color="error" />
+                      ) : (
+                        <FavoriteBorder />
+                      )}
+                    </IconButton>
+                  </Box>
+                </Box>
+
+                <Box sx={{ mt: 2 }}>
+                  <Grid container spacing={1}>
+                    {property.images.map((image, index) => (
+                      <Grid item xs={3} key={index}>
+                        <Box
+                          sx={{
+                            cursor: 'pointer',
+                            position: 'relative',
+                            paddingTop: '75%',
+                            borderRadius: 1,
+                            overflow: 'hidden',
+                            border: selectedImage === index
+                              ? `2px solid ${theme.palette.primary.main}`
+                              : '2px solid transparent',
+                          }}
+                          onClick={() => setSelectedImage(index)}
+                        >
+                          <img
+                            src={image}
+                            alt={`${property.title} ${index + 1}`}
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                            }}
+                          />
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
                 </Box>
               </Box>
-              <Grid container spacing={1}>
-                {property.images.map((image, index) => (
-                  <Grid item xs={3} key={index}>
-                    <Box
-                      sx={{
-                        cursor: 'pointer',
-                        border: selectedImage === index
-                          ? `2px solid ${theme.palette.primary.main}`
-                          : '2px solid transparent',
-                        borderRadius: 1,
-                        overflow: 'hidden',
-                      }}
-                      onClick={() => setSelectedImage(index)}
-                    >
-                      <img
-                        src={image}
-                        alt={`${property.title} ${index + 1}`}
-                        style={{
-                          width: '100%',
-                          height: '80px',
-                          objectFit: 'cover',
-                        }}
-                      />
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
             </Grid>
 
             {/* Property Info */}
@@ -311,14 +402,53 @@ const PropertyDetails = () => {
                     </Typography>
                   </Box>
                 </Box>
-                <Button
-                  variant="contained"
-                  fullWidth
-                  size="large"
-                  onClick={() => setContactDialogOpen(true)}
-                >
-                  Contact Landlord
-                </Button>
+                
+                <Stack spacing={2}>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    size="large"
+                    startIcon={<EventAvailable />}
+                    onClick={() => setBookVisitDialogOpen(true)}
+                    sx={{ 
+                      borderRadius: 2,
+                      py: 1.5,
+                      textTransform: 'none',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    Book a Visit
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    size="large"
+                    startIcon={<Key />}
+                    onClick={() => setRentDialogOpen(true)}
+                    sx={{ 
+                      borderRadius: 2,
+                      py: 1.5,
+                      textTransform: 'none',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    Rent Property
+                  </Button>
+                  <Button
+                    variant="text"
+                    fullWidth
+                    size="large"
+                    onClick={() => setContactDialogOpen(true)}
+                    sx={{ 
+                      borderRadius: 2,
+                      py: 1.5,
+                      textTransform: 'none',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    Contact Landlord
+                  </Button>
+                </Stack>
               </Paper>
 
               {/* Transportation */}
@@ -463,6 +593,100 @@ const PropertyDetails = () => {
 
           {/* Contact Dialog */}
           <ContactDialog />
+
+          {/* Book Visit Dialog */}
+          <Dialog
+            open={bookVisitDialogOpen}
+            onClose={() => setBookVisitDialogOpen(false)}
+            maxWidth="sm"
+            fullWidth
+          >
+            <DialogTitle>Schedule a Visit</DialogTitle>
+            <DialogContent>
+              <Box sx={{ mt: 2 }}>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <DateTimePicker
+                    label="Select Date and Time"
+                    value={visitDate}
+                    onChange={(newValue) => setVisitDate(newValue)}
+                    renderInput={(params) => <TextField {...params} fullWidth />}
+                    minDate={new Date()}
+                    sx={{ mb: 2 }}
+                  />
+                </LocalizationProvider>
+                <TextField
+                  fullWidth
+                  label="Additional Notes"
+                  multiline
+                  rows={4}
+                  sx={{ mt: 2 }}
+                />
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setBookVisitDialogOpen(false)}>Cancel</Button>
+              <Button variant="contained" color="primary">
+                Confirm Visit
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Rent Property Dialog */}
+          <Dialog
+            open={rentDialogOpen}
+            onClose={() => setRentDialogOpen(false)}
+            maxWidth="sm"
+            fullWidth
+          >
+            <DialogTitle>Rent Property</DialogTitle>
+            <DialogContent>
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Rental Terms
+                </Typography>
+                <Stack spacing={2}>
+                  <TextField
+                    fullWidth
+                    label="Lease Duration (months)"
+                    type="number"
+                    defaultValue={12}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Move-in Date"
+                    type="date"
+                    InputLabelProps={{ shrink: true }}
+                  />
+                  <Box sx={{ bgcolor: 'background.default', p: 2, borderRadius: 1 }}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Cost Breakdown
+                    </Typography>
+                    <Stack spacing={1}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography>Monthly Rent</Typography>
+                        <Typography>₹{property.price}</Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography>Security Deposit</Typography>
+                        <Typography>₹{property.price}</Typography>
+                      </Box>
+                      <Divider />
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography fontWeight="bold">Total Initial Payment</Typography>
+                        <Typography fontWeight="bold">₹{property.price * 2}</Typography>
+                      </Box>
+                    </Stack>
+                  </Box>
+                </Stack>
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setRentDialogOpen(false)}>Cancel</Button>
+              <Button variant="contained" color="primary">
+                Proceed to Payment
+              </Button>
+            </DialogActions>
+          </Dialog>
         </Container>
       </Box>
     </>

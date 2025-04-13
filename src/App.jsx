@@ -97,6 +97,9 @@ function App() {
               <Route path='dashboard' element={<LandlordDashboard/>}></Route>
               <Route path='properties' element={<LandlordProperties/>}></Route>
               <Route path='addnewproperty' element={<AddProperty/>}></Route>
+              <Route path='edit-property/:id' element={<AddProperty/>}></Route>
+
+              
               <Route path='profile' element={<UserProfile/>}></Route>
               <Route path='settings' element={<UserProfile/>}></Route>
             </Route>
