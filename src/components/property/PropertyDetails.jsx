@@ -696,7 +696,7 @@ const PropertyDetails = () => {
                   ) : (
                     <Grid item xs={12}>
                       <Typography variant="body2" color="text.secondary">
-                        No features listed for this property
+                        
                       </Typography>
                     </Grid>
                   )}
