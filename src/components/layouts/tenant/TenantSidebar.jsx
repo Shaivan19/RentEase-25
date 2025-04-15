@@ -81,9 +81,15 @@ const TenantSidebar = ({ drawerOpen, toggleDrawer }) => {
             </ListItemButton>
             <ListItemButton 
               sx={{ pl: 4 }}
+<<<<<<< HEAD
               selected={location.pathname === "/tenant/savedproperties"}
               onClick={() => {
                 navigate("/tenant/savedproperties");
+=======
+              selected={location.pathname === "/saved-properties"}
+              onClick={() => {
+                navigate("/saved-properties");
+>>>>>>> 006a48759ff01842cdea22feec6a6135197e021c
                 handleDrawerClose();
               }}
             >

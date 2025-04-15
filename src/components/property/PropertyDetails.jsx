@@ -372,6 +372,7 @@ const PropertyDetails = () => {
 
   const handleFavoriteClick = async () => {
     try {
+<<<<<<< HEAD
       const userData = localStorage.getItem('user');
       if (!userData) {
         navigate('/login');
@@ -413,6 +414,21 @@ const PropertyDetails = () => {
         // Revert the state if there's an error
         setIsFavorite(!isFavorite);
       }
+=======
+      // Toggle favorite status
+      setIsFavorite(!isFavorite);
+      
+      // Here you would typically make an API call to update the favorite status
+      // For example:
+      // await axios.post(`/properties/${id}/favorite`, { isFavorite: !isFavorite });
+      
+      // For now, we'll just show a success message
+      // You can add a snackbar or toast notification here
+    } catch (error) {
+      console.error('Error updating favorite status:', error);
+      // Revert the state if there's an error
+      setIsFavorite(!isFavorite);
+>>>>>>> 006a48759ff01842cdea22feec6a6135197e021c
     }
   };
 

@@ -42,6 +42,7 @@ const Login = () => {
         });
 
         setTimeout(() => {
+<<<<<<< HEAD
           // Redirect based on user type
           if (data.userType === 'Tenant') {
             navigate('/tenant/dashboard');
@@ -49,6 +50,15 @@ const Login = () => {
             navigate('/landlord/dashboard');
           } else if (data.userType === 'Admin') {
             navigate('/admin/dashboard');
+=======
+          // Direct role-based navigation
+          if (userType === "tenant") {
+            navigate("/tenant/dashboard");
+          } else if (userType === "landlord") {
+            navigate("/landlord/dashboard");
+          } else if (userType === "admin") {
+            navigate("/user");
+>>>>>>> 006a48759ff01842cdea22feec6a6135197e021c
           } else {
             navigate('/home');
           }

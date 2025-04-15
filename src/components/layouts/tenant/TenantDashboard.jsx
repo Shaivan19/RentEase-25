@@ -393,9 +393,13 @@ const TenantDashboard = () => {
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                           <LocationIcon fontSize="small" sx={{ mr: 1 }} />
                           <Typography variant="body2" color="text.secondary">
+<<<<<<< HEAD
                             {typeof property.address === 'object' 
                               ? `${property.address.street}, ${property.address.city}, ${property.address.state} ${property.address.zipCode}`
                               : property.address}
+=======
+                            {property.address}
+>>>>>>> 006a48759ff01842cdea22feec6a6135197e021c
                           </Typography>
                         </Box>
                         <Typography variant="h6" color="primary" gutterBottom>
@@ -422,9 +426,13 @@ const TenantDashboard = () => {
                       <CardContent>
                         <Typography variant="h6" gutterBottom>{visit.propertyName}</Typography>
                         <Typography variant="body2" color="text.secondary">
+<<<<<<< HEAD
                           {typeof visit.address === 'object'
                             ? `${visit.address.street}, ${visit.address.city}, ${visit.address.state} ${visit.address.zipCode}`
                             : visit.address}
+=======
+                          {visit.address}
+>>>>>>> 006a48759ff01842cdea22feec6a6135197e021c
                         </Typography>
                         <Box sx={{ mt: 2 }}>
                           <Typography variant="body2">
@@ -452,9 +460,13 @@ const TenantDashboard = () => {
                       <CardContent>
                         <Typography variant="h6" gutterBottom>{booking.propertyName}</Typography>
                         <Typography variant="body2" color="text.secondary">
+<<<<<<< HEAD
                           {typeof booking.address === 'object'
                             ? `${booking.address.street}, ${booking.address.city}, ${booking.address.state} ${booking.address.zipCode}`
                             : booking.address}
+=======
+                          {booking.address}
+>>>>>>> 006a48759ff01842cdea22feec6a6135197e021c
                         </Typography>
                         <Box sx={{ mt: 2 }}>
                           <Typography variant="body2">
@@ -497,9 +509,13 @@ const TenantDashboard = () => {
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                           <LocationIcon fontSize="small" sx={{ mr: 1 }} />
                           <Typography variant="body2" color="text.secondary">
+<<<<<<< HEAD
                             {typeof property.address === 'object' 
                               ? `${property.address.street}, ${property.address.city}, ${property.address.state} ${property.address.zipCode}`
                               : property.address}
+=======
+                            {property.address}
+>>>>>>> 006a48759ff01842cdea22feec6a6135197e021c
                           </Typography>
                         </Box>
                         <Typography variant="h6" color="primary" gutterBottom>

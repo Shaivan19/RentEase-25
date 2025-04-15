@@ -31,8 +31,11 @@ import LandlordProperties from './components/layouts/landlord/LandlordProperties
 import PropertyDetails from './components/property/PropertyDetails'
 import TenantLayout from './components/layouts/tenant/TenantLayout'
 import { isLoggedIn, getUserType } from './utils/auth'
+<<<<<<< HEAD
 import SavedProperties from './components/layouts/tenant/components/SavedProperties'
 // import ResetPassword from './components/common/ResetPassword'
+=======
+>>>>>>> 006a48759ff01842cdea22feec6a6135197e021c
 
 // Protected route component
 const ProtectedRoute = ({ children, allowedUserTypes }) => {

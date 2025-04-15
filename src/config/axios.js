@@ -2,13 +2,13 @@ import axios from 'axios';
 
 // Determine the API base URL based on environment
 // In development, we might use a proxy or localhost address
-const BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://your-production-api-url.com' // Replace with your production API URL
-  : 'http://localhost:5000'; // Replace with your development backend port
+// const BASE_URL = process.env.NODE_ENV === 'production' 
+  // ? 'https://your-production-api-url.com' // Replace with your production API URL
+  // : 'http://localhost:1909'; // Replace with your development backend port
 
 // Create axios instance with custom configuration
 const api = axios.create({
-  baseURL: BASE_URL,
+  baseURL: 'http://localhost:1909',
   timeout: 30000, // 30 seconds timeout
   headers: {
     'Content-Type': 'application/json',

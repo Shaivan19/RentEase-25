@@ -68,7 +68,15 @@ const LandlordDashboard = () => {
     setLoading(true);
     try {
       const user = JSON.parse(localStorage.getItem('user'));
+<<<<<<< HEAD
       console.log("User Data:", user); // Debug user data
+=======
+      console.log("User Data for API call:", {
+        userId: user.userId,
+        token: user.token ? "Token exists" : "No token",
+        userType: user.userType
+      }); // Debug user data
+>>>>>>> 006a48759ff01842cdea22feec6a6135197e021c
   
       if (!user || !user.token) {
         console.error("No user token found");
@@ -92,7 +100,15 @@ const LandlordDashboard = () => {
         console.error("API request was not successful:", response.data);
       }
     } catch (error) {
+<<<<<<< HEAD
       console.error("Error fetching dashboard data:", error.response || error);
+=======
+      console.error("Detailed error:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      })
+>>>>>>> 006a48759ff01842cdea22feec6a6135197e021c
     } finally {
       setLoading(false);
     }
@@ -100,7 +116,11 @@ const LandlordDashboard = () => {
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'));
+<<<<<<< HEAD
     if (!user || !user.token) {
+=======
+    if (user && user.token) {
+>>>>>>> 006a48759ff01842cdea22feec6a6135197e021c
     fetchDashboardData();}
   }, []);
 
@@ -127,7 +147,11 @@ const LandlordDashboard = () => {
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
         <Box>
           <Typography variant="h4" fontWeight={700} gutterBottom sx={{ color: "primary.main" }}>
+<<<<<<< HEAD
             Welcome back, {user?.username || "Landlord"}!
+=======
+          Welcome back, {JSON.parse(localStorage.getItem('user'))?.username || "Landlord"}!
+>>>>>>> 006a48759ff01842cdea22feec6a6135197e021c
           </Typography>
           <Typography variant="subtitle1" color="text.secondary">
             Here's what's happening with your properties today
@@ -156,7 +180,11 @@ const LandlordDashboard = () => {
               value: dashboardData?.stats?.totalProperties ?? 0,
               icon: <HomeWork fontSize="large" />,
               trend: `${dashboardData?.stats?.occupancyRate ?? 0}% Occupied`,
+<<<<<<< HEAD
               trendColor: dashboardData?.stats?.occupancyRate ?? 50 ? "success.main" : "error.main",
+=======
+              trendColor: (dashboardData?.stats?.occupancyRate ??0)>50 ? "success.main" : "error.main",
+>>>>>>> 006a48759ff01842cdea22feec6a6135197e021c
             },
             {
               title: "Pending Requests",

@@ -43,7 +43,9 @@ const Signup = () => {
       username: "",
       email: "",
       password: "",
-      confirmPassword: ""
+      confirmPassword: "",
+      userType: "tenant",
+      phone: "",
     }
   });
   
@@ -59,9 +61,19 @@ const Signup = () => {
   // Stable callback for phone number changes
   const handlePhoneChange = useCallback((newPhone) => {
     setPhone(newPhone);
+    // if (newPhone.trim().length < 10) {}
   }, []);
 
   const onSubmit = async (data) => {
+
+    if (!phone || phone.trim().length < 10){
+      toast.error("Please enter a valid phone number", {
+        position: "top-right",
+        autoClose: 3000,
+        theme: "colored",
+      });
+      return;
+    } 
     setIsLoading(true);
     const userData = {
       username: data.username,
@@ -82,7 +94,8 @@ const Signup = () => {
         
         sessionStorage.setItem("signupData", JSON.stringify({
           email: userData.email,
-          userType: userData.userType
+          userType: userData.userType,
+          phone: userData.phone
         }));
         
         setTimeout(() => {
@@ -252,8 +265,13 @@ const Signup = () => {
               value={phone}
               onChange={handlePhoneChange}
               required
+<<<<<<< HEAD
               error={!phone}
               helperText={!phone ? "Phone number is required" : ""}
+=======
+              error={phone.trim().length < 10}
+              helperText={phone.trim().length < 10 ? "enter a valid phone number" : ""}
+>>>>>>> 006a48759ff01842cdea22feec6a6135197e021c
               sx={{ mb: 2 }}
               InputProps={{ 
                 startAdornment: (
