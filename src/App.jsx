@@ -25,10 +25,14 @@ import AboutUs from './components/common/AboutUs'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import AuthDebugger from './components/common/AuthDebugger'
-import { isLoggedIn, isUserType } from './utils/auth'
+// import { isLoggedIn, isUserType } from './utils/auth'
 import PropertyListingPage from './components/common/PropertList'
 import LandlordProperties from './components/layouts/landlord/LandlordProperties'
 import PropertyDetails from './components/property/PropertyDetails'
+import TenantLayout from './components/layouts/tenant/TenantLayout'
+import { isLoggedIn, getUserType } from './utils/auth'
+import SavedProperties from './components/layouts/tenant/components/SavedProperties'
+// import ResetPassword from './components/common/ResetPassword'
 
 // Protected route component
 const ProtectedRoute = ({ children, allowedUserTypes }) => {
@@ -37,7 +41,8 @@ const ProtectedRoute = ({ children, allowedUserTypes }) => {
   }
   
   // Check if user type is required and if user has that type
-  if (allowedUserTypes && !allowedUserTypes.includes(isUserType())) {
+  const userType = getUserType();
+  if (allowedUserTypes && !allowedUserTypes.includes(userType?.toLowerCase())) {
     return <Navigate to="/" />;
   }
   
@@ -66,17 +71,20 @@ function App() {
             <Route path='/properties' element={<PropertyListingPage/>}></Route>
             <Route path='/aboutus' element={<AboutUs/>}></Route>
             <Route path='/contactus' element={<ContactUs/>}></Route>
+            {/* <Route path='/reset-password' element={<ResetPassword/>}></Route> */}
             
             {/* Tenant protected routes */}
             <Route 
-              path='/tenant/dashboard' 
+              path='/tenant' 
               element={
-                <ProtectedRoute role="tenant" allowedRoles={["tenant"]}>
-                  <TenantDashboard/>
+                <ProtectedRoute allowedUserTypes={["tenant"]}>
+                  <TenantLayout/>
                 </ProtectedRoute>
               }
             >
+              <Route path='dashboard' element={<TenantDashboard/>}></Route>
               <Route path='profile' element={<UserProfile/>}></Route>
+              <Route path='savedproperties' element={<SavedProperties/>}></Route>
             
             </Route>
             
@@ -93,6 +101,9 @@ function App() {
               <Route path='dashboard' element={<LandlordDashboard/>}></Route>
               <Route path='properties' element={<LandlordProperties/>}></Route>
               <Route path='addnewproperty' element={<AddProperty/>}></Route>
+              <Route path='edit-property/:id' element={<AddProperty/>}></Route>
+
+              
               <Route path='profile' element={<UserProfile/>}></Route>
               <Route path='settings' element={<UserProfile/>}></Route>
             </Route>

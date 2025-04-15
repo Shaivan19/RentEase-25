@@ -36,7 +36,7 @@ import { userAPI, authAPI } from '../../services/api';
 const UserProfile = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -50,20 +50,31 @@ const UserProfile = () => {
   });
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchProfile = async () => {
       try {
-        const response = await userAPI.getProfile();
-        setUser(response.data.data);
-        setEditedUser(response.data.data);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching user profile:', err);
-        setError(err.response?.data?.message || 'Failed to load user profile');
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:1906/api/users/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          setProfile(data.data);
+          setEditedUser(data.data);
+        } else {
+          console.error('Error fetching profile:', data.message);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchUserProfile();
+    fetchProfile();
   }, []);
 
   const handleEdit = () => {
@@ -71,19 +82,35 @@ const UserProfile = () => {
   };
 
   const handleCancel = () => {
-    setEditedUser(user);
+    setEditedUser(profile);
     setIsEditing(false);
   };
 
   const handleSave = async () => {
     try {
-      const response = await userAPI.updateProfile(editedUser);
-      setUser(response.data.data);
-      setIsEditing(false);
-      toast.success('Profile updated successfully!');
-    } catch (err) {
-      console.error('Error updating profile:', err);
-      toast.error(err.response?.data?.message || 'Failed to update profile');
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:1906/api/users/profile', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(editedUser)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setProfile(data.data);
+        setIsEditing(false);
+        toast.success('Profile updated successfully!');
+      } else {
+        console.error('Error updating profile:', data.message);
+        toast.error(data.message || 'Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Error updating profile. Please try again.');
     }
   };
 
@@ -102,20 +129,36 @@ const UserProfile = () => {
     }
 
     try {
-      await authAPI.updatePassword({
-        currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:1906/api/users/password', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
       });
-      toast.success('Password changed successfully!');
-      setChangePasswordDialog(false);
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-    } catch (err) {
-      console.error('Error changing password:', err);
-      toast.error(err.response?.data?.message || 'Failed to change password');
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('Password changed successfully!');
+        setChangePasswordDialog(false);
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+      } else {
+        console.error('Error changing password:', data.message);
+        toast.error(data.message || 'Failed to change password');
+      }
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast.error('Error changing password. Please try again.');
     }
   };
 
@@ -137,15 +180,31 @@ const UserProfile = () => {
 
     setUploadingImage(true);
     try {
-      const response = await userAPI.updateAvatar(file);
-      setUser(prev => ({
-        ...prev,
-        avatar: response.data.data.avatar
-      }));
-      toast.success('Profile picture updated successfully!');
-    } catch (err) {
-      console.error('Error uploading image:', err);
-      toast.error(err.response?.data?.message || 'Failed to upload image');
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:1906/api/users/avatar', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/octet-stream'
+        },
+        body: file
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setProfile(prev => ({
+          ...prev,
+          avatar: data.data.avatar
+        }));
+        toast.success('Profile picture updated successfully!');
+      } else {
+        console.error('Error uploading image:', data.message);
+        toast.error(data.message || 'Failed to upload image');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Error uploading image. Please try again.');
     } finally {
       setUploadingImage(false);
     }
@@ -228,7 +287,7 @@ const UserProfile = () => {
             <Grid item xs={12} md={4}>
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <Avatar
-                  src={user?.avatar}
+                  src={profile?.avatar}
                   sx={{
                     width: 150,
                     height: 150,
@@ -236,7 +295,7 @@ const UserProfile = () => {
                     border: `4px solid ${theme.palette.primary.main}`
                   }}
                 >
-                  {user?.username?.charAt(0).toUpperCase()}
+                  {profile?.username?.charAt(0).toUpperCase()}
                 </Avatar>
                 {isEditing && (
                   <Button
@@ -270,7 +329,7 @@ const UserProfile = () => {
                   <TextField
                     fullWidth
                     name="username"
-                    value={isEditing ? editedUser.username : user.username}
+                    value={isEditing ? editedUser.username : profile.username}
                     onChange={handleInputChange}
                     disabled={!isEditing}
                     InputProps={{
@@ -290,7 +349,7 @@ const UserProfile = () => {
                     fullWidth
                     name="email"
                     type="email"
-                    value={isEditing ? editedUser.email : user.email}
+                    value={isEditing ? editedUser.email : profile.email}
                     onChange={handleInputChange}
                     disabled={!isEditing}
                     InputProps={{
@@ -309,7 +368,7 @@ const UserProfile = () => {
                   <TextField
                     fullWidth
                     name="phone"
-                    value={isEditing ? editedUser.phone : user.phone}
+                    value={isEditing ? editedUser.phone : profile.phone}
                     onChange={handleInputChange}
                     disabled={!isEditing}
                     InputProps={{
@@ -327,7 +386,7 @@ const UserProfile = () => {
                   </Typography>
                   <TextField
                     fullWidth
-                    value={user.userType}
+                    value={profile.userType}
                     disabled
                     InputProps={{
                       startAdornment: (

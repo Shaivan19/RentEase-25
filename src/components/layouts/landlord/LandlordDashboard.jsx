@@ -18,6 +18,7 @@ import {
   TrendingUp,
   NotificationsActive,
   Refresh,
+  Upcoming,
 } from "@mui/icons-material";
 import EarningsChart from "./components/EarningChart";
 import TenantRequestsTable from "./components/TenantRequestTable";
@@ -30,31 +31,82 @@ const LandlordDashboard = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [loading, setLoading] = useState(true);
+
   const [dashboardData, setDashboardData] = useState({
-    totalProperties: 0,
-    pendingRequests: 0,
-    totalEarnings: 0,
-    earningsTrend: "0",
-    monthlyEarnings: [],
-    tenantRequests: []
+    properties:[],
+    upcomingVisits:[],
+    recentBookings:[],
+    stats:{
+      totalProperties: 0,
+      occupiedProperties: 0,
+      occupancyRate: 0,
+      totalBookings: 0,
+      upcomingVisitsCount: 0,
+    }
+  //   totalProperties: 0,
+  //   pendingRequests: 0,
+  //   totalEarnings: 0,
+  //   earningsTrend: "0",
+  //   monthlyEarnings: [],
+  //   tenantRequests: []
   });
+
+  // const fetchDashboardData = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const userData = JSON.parse(localStorage.getItem('user'));
+  //     const response = await axios.get(`/landlord/dashboard/${userData.userId}`);
+  //     setDashboardData(response.data);
+  //   } catch (error) {
+  //     console.error("Error fetching dashboard data:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const userData = JSON.parse(localStorage.getItem('user'));
-      const response = await axios.get(`/landlord/dashboard/${userData.userId}`);
-      setDashboardData(response.data);
+      const user = JSON.parse(localStorage.getItem('user'));
+      console.log("User Data:", user); // Debug user data
+  
+      if (!user || !user.token) {
+        console.error("No user token found");
+        return;
+      }
+  
+      const response = await axios.get('/landlord/dashboard', {
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        }
+      });
+  
+      console.log("Raw API Response:", response); // Debug full response
+      console.log("Response Data:", response.data); // Debug response data
+  
+      if (response.data.success) {
+        const dashboardData = response.data.data;
+        console.log("Dashboard Stats:", dashboardData.stats); // Debug stats specifically
+        setDashboardData(dashboardData);
+      } else {
+        console.error("API request was not successful:", response.data);
+      }
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+      console.error("Error fetching dashboard data:", error.response || error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || !user.token) {
+    fetchDashboardData();}
   }, []);
+
+  const pendingBookings = dashboardData.recentBookings.filter((booking) => booking.status.toLowerCase() === "pending").length;
+
+  const totalEarnings = dashboardData.properties.filter(property => property.status ==='Occupied').reduce((total, property)=> total + (property.price || 0),0)
 
   const handleRefresh = () => {
     setLastUpdated(new Date());
@@ -75,7 +127,7 @@ const LandlordDashboard = () => {
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
         <Box>
           <Typography variant="h4" fontWeight={700} gutterBottom sx={{ color: "primary.main" }}>
-            Welcome back, {JSON.parse(localStorage.getItem('user'))?.name || 'Landlord'}
+            Welcome back, {user?.username || "Landlord"}!
           </Typography>
           <Typography variant="subtitle1" color="text.secondary">
             Here's what's happening with your properties today
@@ -101,24 +153,24 @@ const LandlordDashboard = () => {
           stats={[
             {
               title: "Total Properties",
-              value: dashboardData.totalProperties,
+              value: dashboardData?.stats?.totalProperties ?? 0,
               icon: <HomeWork fontSize="large" />,
-              trend: dashboardData.propertyTrend,
-              trendColor: dashboardData.propertyTrend?.startsWith('+') ? "success.main" : "error.main",
+              trend: `${dashboardData?.stats?.occupancyRate ?? 0}% Occupied`,
+              trendColor: dashboardData?.stats?.occupancyRate ?? 50 ? "success.main" : "error.main",
             },
             {
               title: "Pending Requests",
-              value: dashboardData.pendingRequests,
+              value: pendingBookings,
               icon: <Assignment fontSize="large" />,
-              trend: dashboardData.requestsTrend,
-              trendColor: dashboardData.requestsTrend?.startsWith('+') ? "error.main" : "success.main",
+              trend: `${dashboardData?.stats?.upcomingVisitsCount??0}Visits Scheduled`,
+              trendColor: pendingBookings > 0 ? "warning.main": "success.main",
             },
             {
               title: "Total Earnings",
-              value: formatToRupees(dashboardData.totalEarnings),
+              value: formatToRupees(dashboardData?.properties?.filter(property => property.status ==='Occupied').reduce((total, property)=> total + (property.price || 0),0)),
               icon: <MonetizationOn fontSize="large" />,
-              trend: dashboardData.earningsTrend,
-              trendColor: dashboardData.earningsTrend?.startsWith('+') ? "success.main" : "error.main",
+              trend: `${dashboardData?.stats?.occupiedProperties??0} Rented Properties`,
+              trendColor: "success.main",
             },
           ]}
         />

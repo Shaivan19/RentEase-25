@@ -55,9 +55,9 @@ const MaintenanceRequest = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
-    type: '',
-    priority: '',
+    title: '',
     description: '',
+    priority: 'medium',
     images: [],
     preferredDate: '',
     preferredTime: '',
@@ -96,10 +96,50 @@ const MaintenanceRequest = () => {
     setPreviewImages(newPreviews);
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    // Add form submission logic here
-    setDialogOpen(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+      const formDataToSend = new FormData();
+      
+      // Append form data
+      Object.keys(formData).forEach(key => {
+        if (key === 'images') {
+          formData.images.forEach(image => {
+            formDataToSend.append('images', image);
+          });
+        } else {
+          formDataToSend.append(key, formData[key]);
+        }
+      });
+
+      const response = await fetch('http://localhost:1906/api/maintenance/request', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formDataToSend
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert('Maintenance request submitted successfully!');
+        setFormData({
+          title: '',
+          description: '',
+          priority: 'medium',
+          images: [],
+          preferredDate: '',
+          preferredTime: '',
+        });
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error('Error submitting maintenance request:', error);
+      alert('Error submitting request. Please try again.');
+    }
   };
 
   const steps = [
@@ -114,14 +154,14 @@ const MaintenanceRequest = () => {
                   sx={{
                     p: 2,
                     cursor: 'pointer',
-                    border: formData.type === type
+                    border: formData.title === type
                       ? `2px solid ${theme.palette.primary.main}`
                       : '2px solid transparent',
                     '&:hover': {
                       borderColor: theme.palette.primary.main,
                     },
                   }}
-                  onClick={() => setFormData({ ...formData, type })}
+                  onClick={() => setFormData({ ...formData, title: type })}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Build color="primary" />

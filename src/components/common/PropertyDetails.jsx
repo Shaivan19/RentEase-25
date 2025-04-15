@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Navbar from '../../components/layouts/Navbar';
 import {
   Box,
   Container,
@@ -40,7 +41,14 @@ import {
   DirectionsCar,
   DirectionsTransit,
   DirectionsWalk,
+  EventAvailable,
+  Key,
+  ArrowBack,
+  ArrowForward,
 } from '@mui/icons-material';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 const property = {
   id: 1,
@@ -86,6 +94,9 @@ const PropertyDetails = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [tabValue, setTabValue] = useState(0);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [bookVisitDialogOpen, setBookVisitDialogOpen] = useState(false);
+  const [rentDialogOpen, setRentDialogOpen] = useState(false);
+  const [visitDate, setVisitDate] = useState(null);
   const [contactForm, setContactForm] = useState({
     name: '',
     email: '',
@@ -108,6 +119,14 @@ const PropertyDetails = () => {
     event.preventDefault();
     // Add contact form submission logic here
     setContactDialogOpen(false);
+  };
+
+  const handlePrevImage = () => {
+    setSelectedImage((prev) => (prev > 0 ? prev - 1 : property.images.length - 1));
+  };
+
+  const handleNextImage = () => {
+    setSelectedImage((prev) => (prev < property.images.length - 1 ? prev + 1 : 0));
   };
 
   const ContactDialog = () => (
@@ -179,282 +198,498 @@ const PropertyDetails = () => {
   );
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Grid container spacing={4}>
-        {/* Image Gallery */}
-        <Grid item xs={12} md={8}>
-          <Box sx={{ position: 'relative', mb: 2 }}>
-            <img
-              src={property.images[selectedImage]}
-              alt={property.title}
-              style={{
-                width: '100%',
-                height: '400px',
-                objectFit: 'cover',
-                borderRadius: theme.shape.borderRadius,
-              }}
-            />
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 16,
-                right: 16,
-                display: 'flex',
-                gap: 1,
-              }}
-            >
-              <IconButton
-                sx={{
-                  bgcolor: 'white',
-                  '&:hover': { bgcolor: 'white' },
-                }}
-              >
-                <Share />
-              </IconButton>
-              <IconButton
-                sx={{
-                  bgcolor: 'white',
-                  '&:hover': { bgcolor: 'white' },
-                }}
-              >
-                {property.isFavorite ? (
-                  <Favorite color="error" />
-                ) : (
-                  <FavoriteBorder />
-                )}
-              </IconButton>
-            </Box>
-          </Box>
-          <Grid container spacing={1}>
-            {property.images.map((image, index) => (
-              <Grid item xs={3} key={index}>
+    <>
+      <Navbar />
+      <Box sx={{ 
+        width: '100%',
+        minHeight: '100vh',
+        pt: '64px',
+        bgcolor: 'background.default'
+      }}>
+        <Container 
+          maxWidth={false}
+          sx={{ 
+            py: 4,
+            px: { xs: 2, sm: 4, md: 6, lg: 8 },
+            maxWidth: '1600px',
+            mx: 'auto',
+          }}
+        >
+          <Grid container spacing={4}>
+            {/* Image Gallery */}
+            <Grid item xs={12} md={8}>
+              <Box sx={{ position: 'relative', mb: 2, width: '100%' }}>
                 <Box
                   sx={{
-                    cursor: 'pointer',
-                    border: selectedImage === index
-                      ? `2px solid ${theme.palette.primary.main}`
-                      : '2px solid transparent',
-                    borderRadius: 1,
+                    position: 'relative',
+                    width: '100%',
+                    height: { xs: '300px', md: '500px' },
+                    borderRadius: 2,
                     overflow: 'hidden',
                   }}
-                  onClick={() => setSelectedImage(index)}
                 >
                   <img
-                    src={image}
-                    alt={`${property.title} ${index + 1}`}
+                    src={property.images[selectedImage]}
+                    alt={property.title}
                     style={{
                       width: '100%',
-                      height: '80px',
-                      objectFit: 'cover',
+                      height: '100%',
+                      objectFit: 'contain',
+                      backgroundColor: 'rgba(0,0,0,0.03)',
                     }}
                   />
-                </Box>
-              </Grid>
-            ))}
-          </Grid>
-        </Grid>
+                  
+                  <IconButton
+                    sx={{
+                      position: 'absolute',
+                      left: 16,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      bgcolor: 'rgba(255,255,255,0.8)',
+                      '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+                      boxShadow: 2,
+                    }}
+                    onClick={handlePrevImage}
+                  >
+                    <ArrowBack />
+                  </IconButton>
+                  
+                  <IconButton
+                    sx={{
+                      position: 'absolute',
+                      right: 16,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      bgcolor: 'rgba(255,255,255,0.8)',
+                      '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+                      boxShadow: 2,
+                    }}
+                    onClick={handleNextImage}
+                  >
+                    <ArrowForward />
+                  </IconButton>
 
-        {/* Property Info */}
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
-              ₹{property.price}
-              <Typography
-                component="span"
-                variant="subtitle1"
-                color="text.secondary"
-              >
-                /month
-              </Typography>
-            </Typography>
-            <Typography variant="h5" gutterBottom>
-              {property.title}
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <LocationOn fontSize="small" color="action" sx={{ mr: 0.5 }} />
-              <Typography variant="body1" color="text.secondary">
-                {property.location}
-              </Typography>
-            </Box>
-            <Box
-              sx={{
-                display: 'flex',
-                gap: 3,
-                mb: 3,
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Bed fontSize="small" color="action" sx={{ mr: 0.5 }} />
-                <Typography variant="body1">
-                  {property.bedrooms} beds
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Bath fontSize="small" color="action" sx={{ mr: 0.5 }} />
-                <Typography variant="body1">
-                  {property.bathrooms} baths
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <SquareFoot fontSize="small" color="action" sx={{ mr: 0.5 }} />
-                <Typography variant="body1">
-                  {property.area} sqft
-                </Typography>
-              </Box>
-            </Box>
-            <Button
-              variant="contained"
-              fullWidth
-              size="large"
-              onClick={() => setContactDialogOpen(true)}
-            >
-              Contact Landlord
-            </Button>
-          </Paper>
-
-          {/* Transportation */}
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Transportation
-            </Typography>
-            <Stack spacing={2}>
-              {property.transportation.map((item) => (
-                <Box
-                  key={item.type}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                  }}
-                >
-                  {item.icon}
-                  <Typography variant="body1">
-                    {item.type}: {item.time}
-                  </Typography>
-                </Box>
-              ))}
-            </Stack>
-          </Paper>
-
-          {/* Amenities */}
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Amenities
-            </Typography>
-            <Grid container spacing={2}>
-              {property.amenities.map((amenity) => (
-                <Grid item xs={6} key={amenity.name}>
                   <Box
                     sx={{
+                      position: 'absolute',
+                      bottom: 16,
+                      right: 16,
+                      bgcolor: 'rgba(0,0,0,0.6)',
+                      color: 'white',
+                      px: 2,
+                      py: 0.5,
+                      borderRadius: 1,
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    {selectedImage + 1} / {property.images.length}
+                  </Box>
+
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 16,
+                      right: 16,
                       display: 'flex',
-                      alignItems: 'center',
                       gap: 1,
                     }}
                   >
-                    {amenity.icon}
-                    <Typography variant="body2">
-                      {amenity.name}
+                    <IconButton
+                      sx={{
+                        bgcolor: 'rgba(255,255,255,0.8)',
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+                      }}
+                    >
+                      <Share />
+                    </IconButton>
+                    <IconButton
+                      sx={{
+                        bgcolor: 'rgba(255,255,255,0.8)',
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+                      }}
+                    >
+                      {property.isFavorite ? (
+                        <Favorite color="error" />
+                      ) : (
+                        <FavoriteBorder />
+                      )}
+                    </IconButton>
+                  </Box>
+                </Box>
+
+                <Box sx={{ mt: 2 }}>
+                  <Grid container spacing={1}>
+                    {property.images.map((image, index) => (
+                      <Grid item xs={3} key={index}>
+                        <Box
+                          sx={{
+                            cursor: 'pointer',
+                            position: 'relative',
+                            paddingTop: '75%',
+                            borderRadius: 1,
+                            overflow: 'hidden',
+                            border: selectedImage === index
+                              ? `2px solid ${theme.palette.primary.main}`
+                              : '2px solid transparent',
+                          }}
+                          onClick={() => setSelectedImage(index)}
+                        >
+                          <img
+                            src={image}
+                            alt={`${property.title} ${index + 1}`}
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                            }}
+                          />
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+              </Box>
+            </Grid>
+
+            {/* Property Info */}
+            <Grid item xs={12} md={4}>
+              <Paper sx={{ p: 3, mb: 3 }}>
+                <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
+                  ₹{property.price}
+                  <Typography
+                    component="span"
+                    variant="subtitle1"
+                    color="text.secondary"
+                  >
+                    /month
+                  </Typography>
+                </Typography>
+                <Typography variant="h5" gutterBottom>
+                  {property.title}
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <LocationOn fontSize="small" color="action" sx={{ mr: 0.5 }} />
+                  <Typography variant="body1" color="text.secondary">
+                    {property.location}
+                  </Typography>
+                </Box>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 3,
+                    mb: 3,
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Bed fontSize="small" color="action" sx={{ mr: 0.5 }} />
+                    <Typography variant="body1">
+                      {property.bedrooms} beds
                     </Typography>
                   </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Bath fontSize="small" color="action" sx={{ mr: 0.5 }} />
+                    <Typography variant="body1">
+                      {property.bathrooms} baths
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <SquareFoot fontSize="small" color="action" sx={{ mr: 0.5 }} />
+                    <Typography variant="body1">
+                      {property.area} sqft
+                    </Typography>
+                  </Box>
+                </Box>
+                
+                <Stack spacing={2}>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    size="large"
+                    startIcon={<EventAvailable />}
+                    onClick={() => setBookVisitDialogOpen(true)}
+                    sx={{ 
+                      borderRadius: 2,
+                      py: 1.5,
+                      textTransform: 'none',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    Book a Visit
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    size="large"
+                    startIcon={<Key />}
+                    onClick={() => setRentDialogOpen(true)}
+                    sx={{ 
+                      borderRadius: 2,
+                      py: 1.5,
+                      textTransform: 'none',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    Rent Property
+                  </Button>
+                  <Button
+                    variant="text"
+                    fullWidth
+                    size="large"
+                    onClick={() => setContactDialogOpen(true)}
+                    sx={{ 
+                      borderRadius: 2,
+                      py: 1.5,
+                      textTransform: 'none',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    Contact Landlord
+                  </Button>
+                </Stack>
+              </Paper>
+
+              {/* Transportation */}
+              <Paper sx={{ p: 3, mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Transportation
+                </Typography>
+                <Stack spacing={2}>
+                  {property.transportation.map((item) => (
+                    <Box
+                      key={item.type}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                      }}
+                    >
+                      {item.icon}
+                      <Typography variant="body1">
+                        {item.type}: {item.time}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Stack>
+              </Paper>
+
+              {/* Amenities */}
+              <Paper sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Amenities
+                </Typography>
+                <Grid container spacing={2}>
+                  {property.amenities.map((amenity) => (
+                    <Grid item xs={6} key={amenity.name}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                        }}
+                      >
+                        {amenity.icon}
+                        <Typography variant="body2">
+                          {amenity.name}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  ))}
                 </Grid>
-              ))}
-            </Grid>
-          </Paper>
-        </Grid>
-      </Grid>
-
-      {/* Description and Details */}
-      <Box sx={{ mt: 4 }}>
-        <Tabs
-          value={tabValue}
-          onChange={handleTabChange}
-          sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}
-        >
-          <Tab label="Description" />
-          <Tab label="Details" />
-          <Tab label="Location" />
-        </Tabs>
-
-        {tabValue === 0 && (
-          <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
-            {property.description}
-          </Typography>
-        )}
-
-        {tabValue === 1 && (
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Typography variant="h6" gutterBottom>
-                Property Details
-              </Typography>
-              <Stack spacing={2}>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Property Type
-                  </Typography>
-                  <Typography variant="body1">{property.type}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Bedrooms
-                  </Typography>
-                  <Typography variant="body1">{property.bedrooms}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Bathrooms
-                  </Typography>
-                  <Typography variant="body1">{property.bathrooms}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Square Footage
-                  </Typography>
-                  <Typography variant="body1">{property.area} sqft</Typography>
-                </Box>
-              </Stack>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Typography variant="h6" gutterBottom>
-                Additional Information
-              </Typography>
-              <Stack spacing={2}>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Available From
-                  </Typography>
-                  <Typography variant="body1">
-                    <CalendarToday fontSize="small" sx={{ mr: 0.5 }} />
-                    Immediate
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Lease Term
-                  </Typography>
-                  <Typography variant="body1">12 months</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Security Deposit
-                  </Typography>
-                  <Typography variant="body1">₹{property.price}</Typography>
-                </Box>
-              </Stack>
+              </Paper>
             </Grid>
           </Grid>
-        )}
 
-        {tabValue === 2 && (
-          <Box sx={{ height: 400, bgcolor: 'grey.100' }}>
-            {/* Add map component here */}
+          {/* Description and Details */}
+          <Box sx={{ mt: 4 }}>
+            <Tabs
+              value={tabValue}
+              onChange={handleTabChange}
+              sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}
+            >
+              <Tab label="Description" />
+              <Tab label="Details" />
+              <Tab label="Location" />
+            </Tabs>
+
+            {tabValue === 0 && (
+              <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
+                {property.description}
+              </Typography>
+            )}
+
+            {tabValue === 1 && (
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" gutterBottom>
+                    Property Details
+                  </Typography>
+                  <Stack spacing={2}>
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Property Type
+                      </Typography>
+                      <Typography variant="body1">{property.type}</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Bedrooms
+                      </Typography>
+                      <Typography variant="body1">{property.bedrooms}</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Bathrooms
+                      </Typography>
+                      <Typography variant="body1">{property.bathrooms}</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Square Footage
+                      </Typography>
+                      <Typography variant="body1">{property.area} sqft</Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" gutterBottom>
+                    Additional Information
+                  </Typography>
+                  <Stack spacing={2}>
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Available From
+                      </Typography>
+                      <Typography variant="body1">
+                        <CalendarToday fontSize="small" sx={{ mr: 0.5 }} />
+                        Immediate
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Lease Term
+                      </Typography>
+                      <Typography variant="body1">12 months</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Security Deposit
+                      </Typography>
+                      <Typography variant="body1">₹{property.price}</Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+              </Grid>
+            )}
+
+            {tabValue === 2 && (
+              <Box sx={{ height: 400, bgcolor: 'grey.100' }}>
+                {/* Add map component here */}
+              </Box>
+            )}
           </Box>
-        )}
-      </Box>
 
-      {/* Contact Dialog */}
-      <ContactDialog />
-    </Container>
+          {/* Contact Dialog */}
+          <ContactDialog />
+
+          {/* Book Visit Dialog */}
+          <Dialog
+            open={bookVisitDialogOpen}
+            onClose={() => setBookVisitDialogOpen(false)}
+            maxWidth="sm"
+            fullWidth
+          >
+            <DialogTitle>Schedule a Visit</DialogTitle>
+            <DialogContent>
+              <Box sx={{ mt: 2 }}>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <DateTimePicker
+                    label="Select Date and Time"
+                    value={visitDate}
+                    onChange={(newValue) => setVisitDate(newValue)}
+                    renderInput={(params) => <TextField {...params} fullWidth />}
+                    minDate={new Date()}
+                    sx={{ mb: 2 }}
+                  />
+                </LocalizationProvider>
+                <TextField
+                  fullWidth
+                  label="Additional Notes"
+                  multiline
+                  rows={4}
+                  sx={{ mt: 2 }}
+                />
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setBookVisitDialogOpen(false)}>Cancel</Button>
+              <Button variant="contained" color="primary">
+                Confirm Visit
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Rent Property Dialog */}
+          <Dialog
+            open={rentDialogOpen}
+            onClose={() => setRentDialogOpen(false)}
+            maxWidth="sm"
+            fullWidth
+          >
+            <DialogTitle>Rent Property</DialogTitle>
+            <DialogContent>
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Rental Terms
+                </Typography>
+                <Stack spacing={2}>
+                  <TextField
+                    fullWidth
+                    label="Lease Duration (months)"
+                    type="number"
+                    defaultValue={12}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Move-in Date"
+                    type="date"
+                    InputLabelProps={{ shrink: true }}
+                  />
+                  <Box sx={{ bgcolor: 'background.default', p: 2, borderRadius: 1 }}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Cost Breakdown
+                    </Typography>
+                    <Stack spacing={1}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography>Monthly Rent</Typography>
+                        <Typography>₹{property.price}</Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography>Security Deposit</Typography>
+                        <Typography>₹{property.price}</Typography>
+                      </Box>
+                      <Divider />
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography fontWeight="bold">Total Initial Payment</Typography>
+                        <Typography fontWeight="bold">₹{property.price * 2}</Typography>
+                      </Box>
+                    </Stack>
+                  </Box>
+                </Stack>
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setRentDialogOpen(false)}>Cancel</Button>
+              <Button variant="contained" color="primary">
+                Proceed to Payment
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </Container>
+      </Box>
+    </>
   );
 };
 

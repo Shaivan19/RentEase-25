@@ -251,6 +251,9 @@ const Signup = () => {
               defaultCountry="IN"
               value={phone}
               onChange={handlePhoneChange}
+              required
+              error={!phone}
+              helperText={!phone ? "Phone number is required" : ""}
               sx={{ mb: 2 }}
               InputProps={{ 
                 startAdornment: (

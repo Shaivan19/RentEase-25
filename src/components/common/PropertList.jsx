@@ -36,15 +36,25 @@ import {
   Star
 } from '@mui/icons-material';
 import { styled } from '@mui/system';
+import Carousel from 'react-material-ui-carousel';
 
 const PropertyCard = styled(Card)(({ theme }) => ({
-  borderRadius: '12px',
+  borderRadius: '16px',
   overflow: 'hidden',
   transition: 'all 0.3s ease',
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
   boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
   '&:hover': {
     transform: 'translateY(-5px)',
     boxShadow: '0 8px 30px rgba(0,0,0,0.12)'
+  },
+  '& .MuiCardContent-root': {
+    padding: theme.spacing(3),
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column'
   }
 }));
 
@@ -66,6 +76,7 @@ const FavoriteButton = styled(IconButton)(({ theme }) => ({
   top: theme?.spacing?.(2) || '16px',
   right: theme?.spacing?.(2) || '16px',
   backgroundColor: 'rgba(255,255,255,0.9)',
+  zIndex: 2,
   '&:hover': {
     backgroundColor: 'rgba(255,255,255,1)'
   }
@@ -401,77 +412,192 @@ const PropertyListingPage = () => {
               <Grid item xs={12} sm={6} md={4} key={property._id}>
                 <PropertyCard>
                   <Box sx={{ position: 'relative' }}>
-                    <CardMedia
-                      component="img"
-                      height="220"
-                      image={property.images[0] || 'https://via.placeholder.com/400x300?text=No+Image'}
-                      alt={property.title}
-                    />
-                    <PriceTag>₹{property.price.toLocaleString()}/mo</PriceTag>
-                    <FavoriteButton onClick={() => toggleFavorite(property._id)}>
+                    <FavoriteButton 
+                      onClick={() => toggleFavorite(property._id)}
+                      sx={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255, 255, 255, 1)'
+                        }
+                      }}
+                    >
                       {favorites.includes(property._id) ? (
                         <Favorite color="error" />
                       ) : (
                         <FavoriteBorder />
                       )}
                     </FavoriteButton>
-                  </Box>
-                  <CardContent>
-                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
-                      <Typography variant="h6" component="h3" sx={{ fontWeight: 700 }}>
-                        {property.title}
-                      </Typography>
-                      <Chip 
-                        label={property.propertyType}
-                        size="small"
-                        color="primary"
-                        variant="outlined"
+                    {property.images.length > 0 ? (
+                      <Carousel
+                        animation="slide"
+                        autoPlay={true}
+                        interval={6000}
+                        indicators={property.images.length > 1}
+                        navButtonsAlwaysInvisible={property.images.length <= 1}
+                        sx={{
+                          height: 250,
+                          '& .MuiPaper-root': {
+                            borderRadius: 0,
+                          }
+                        }}
+                      >
+                        {property.images.map((image, i) => (
+                          <Box
+                            key={i}
+                            component="img"
+                            src={image || 'https://via.placeholder.com/400x300?text=No+Image'}
+                            alt={`${property.title} - Image ${i + 1}`}
+                            sx={{
+                              height: 250,
+                              width: '100%',
+                              objectFit: 'cover',
+                              display: 'block'
+                            }}
+                          />
+                        ))}
+                      </Carousel>
+                    ) : (
+                      <Box
+                        component="img"
+                        src="https://via.placeholder.com/400x300?text=No+Image"
+                        alt={property.title}
+                        sx={{
+                          height: 250,
+                          width: '100%',
+                          objectFit: 'cover',
+                          display: 'block'
+                        }}
                       />
-                    </Stack>
-                    
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
-                      <LocationOn fontSize="small" color="primary" sx={{ verticalAlign: 'middle', mr: 0.5 }} />
-                      {property.address ? `${property.address.street}, ${property.address.city}, ${property.address.state}` : property.location}
-                    </Typography>
-                    
-                    <Divider sx={{ my: 1.5 }} />
-                    
-                    <Grid container spacing={1} sx={{ mt: 1 }}>
+                    )}
+                    <PriceTag>₹{property.price.toLocaleString()}/mo</PriceTag>
+                  </Box>
+
+                  <CardContent>
+                    <Box sx={{ mb: 2 }}>
+                      <Stack 
+                        direction="row" 
+                        justifyContent="space-between" 
+                        alignItems="flex-start" 
+                        spacing={1}
+                        sx={{ mb: 1 }}
+                      >
+                        <Typography 
+                          variant="h6" 
+                          component="h3" 
+                          sx={{ 
+                            fontWeight: 700,
+                            fontSize: '1.1rem',
+                            lineHeight: 1.3,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical'
+                          }}
+                        >
+                          {property.title}
+                        </Typography>
+                        <Chip 
+                          label={property.propertyType}
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                          sx={{ 
+                            borderRadius: '8px',
+                            fontWeight: 600,
+                            fontSize: '0.75rem'
+                          }}
+                        />
+                      </Stack>
+
+                      <Stack 
+                        direction="row" 
+                        alignItems="center" 
+                        spacing={0.5}
+                        sx={{ 
+                          color: 'text.secondary',
+                          fontSize: '0.875rem'
+                        }}
+                      >
+                        <LocationOn fontSize="small" color="primary" />
+                        <Typography 
+                          variant="body2" 
+                          sx={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {property.address ? 
+                            `${property.address.street}, ${property.address.city}, ${property.address.state}` 
+                            : property.location}
+                        </Typography>
+                      </Stack>
+                    </Box>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
                       <Grid item xs={4}>
-                        <Stack direction="row" alignItems="center" spacing={0.5}>
-                          <KingBed fontSize="small" color="action" />
-                          <Typography variant="body2">
+                        <Stack 
+                          direction="column" 
+                          alignItems="center" 
+                          spacing={0.5}
+                          sx={{ textAlign: 'center' }}
+                        >
+                          <KingBed color="primary" />
+                          <Typography variant="body2" fontWeight={600}>
                             {property.bedrooms} {property.bedrooms > 1 ? 'Beds' : 'Bed'}
                           </Typography>
                         </Stack>
                       </Grid>
                       <Grid item xs={4}>
-                        <Stack direction="row" alignItems="center" spacing={0.5}>
-                          <Bathtub fontSize="small" color="action" />
-                          <Typography variant="body2">
+                        <Stack 
+                          direction="column" 
+                          alignItems="center" 
+                          spacing={0.5}
+                          sx={{ textAlign: 'center' }}
+                        >
+                          <Bathtub color="primary" />
+                          <Typography variant="body2" fontWeight={600}>
                             {property.bathrooms} {property.bathrooms > 1 ? 'Baths' : 'Bath'}
                           </Typography>
                         </Stack>
                       </Grid>
                       <Grid item xs={4}>
-                        <Stack direction="row" alignItems="center" spacing={0.5}>
-                          <SquareFoot fontSize="small" color="action" />
-                          <Typography variant="body2">
-                            {property.propertyType}
+                        <Stack 
+                          direction="column" 
+                          alignItems="center" 
+                          spacing={0.5}
+                          sx={{ textAlign: 'center' }}
+                        >
+                          <SquareFoot color="primary" />
+                          <Typography variant="body2" fontWeight={600}>
+                            {property.landArea?.value || 'N/A'} {property.landArea?.unit || 'sqft'}
                           </Typography>
                         </Stack>
                       </Grid>
                     </Grid>
 
                     {property.amenities && property.amenities.length > 0 && (
-                      <Box sx={{ mt: 2 }}>
-                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      <Box sx={{ mb: 2, flex: 1 }}>
+                        <Stack 
+                          direction="row" 
+                          spacing={1} 
+                          flexWrap="wrap" 
+                          useFlexGap 
+                          sx={{ gap: 1 }}
+                        >
                           {property.amenities.slice(0, 3).map((amenity, index) => (
                             <Chip
                               key={index}
                               label={amenity}
                               size="small"
                               variant="outlined"
+                              sx={{ 
+                                borderRadius: '8px',
+                                fontSize: '0.75rem'
+                              }}
                             />
                           ))}
                           {property.amenities.length > 3 && (
@@ -479,16 +605,27 @@ const PropertyListingPage = () => {
                               label={`+${property.amenities.length - 3} more`}
                               size="small"
                               variant="outlined"
+                              sx={{ 
+                                borderRadius: '8px',
+                                fontSize: '0.75rem'
+                              }}
                             />
                           )}
                         </Stack>
                       </Box>
                     )}
-                    
+
                     <Button
                       fullWidth
                       variant="contained"
-                      sx={{ mt: 3, py: 1.5, borderRadius: '8px', fontWeight: 600 }}
+                      sx={{ 
+                        mt: 'auto',
+                        py: 1.5, 
+                        borderRadius: '8px', 
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        fontSize: '1rem'
+                      }}
                       onClick={() => window.location.href = `/property/${property._id}`}
                     >
                       View Details

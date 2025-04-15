@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -74,7 +74,7 @@ const paymentHistory = [
   },
 ];
 
-const Payment = () => {
+const Payment = ({ propertyId, amount }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [selectedMethod, setSelectedMethod] = useState('');
@@ -85,6 +85,7 @@ const Payment = () => {
     cvv: '',
     name: '',
   });
+  const [orderId, setOrderId] = useState(null);
 
   const handleMethodSelect = (methodId) => {
     setSelectedMethod(methodId);
@@ -130,6 +131,69 @@ const Payment = () => {
     }
   };
 
+  const initializePayment = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:1906/api/payments/create', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          propertyId,
+          amount,
+          paymentType: 'RENT'
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const options = {
+          key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+          amount: data.order.amount,
+          currency: "INR",
+          name: "RentEase",
+          description: "Property Payment",
+          order_id: data.order.id,
+          handler: async (response) => {
+            try {
+              const verifyResponse = await fetch('http://localhost:1906/api/payments/verify', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(response)
+              });
+
+              const verifyData = await verifyResponse.json();
+
+              if (verifyResponse.ok) {
+                alert('Payment successful!');
+                // Handle successful payment (e.g., update UI, redirect)
+              } else {
+                alert(verifyData.message);
+              }
+            } catch (error) {
+              console.error('Payment verification error:', error);
+              alert('Error verifying payment. Please contact support.');
+            }
+          }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error('Payment initialization error:', error);
+      alert('Error initializing payment. Please try again.');
+    }
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
@@ -149,7 +213,7 @@ const Payment = () => {
             <Stack spacing={2}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography>Monthly Rent</Typography>
-                <Typography variant="h6">₹2,500</Typography>
+                <Typography variant="h6">₹{amount}</Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography>Due Date</Typography>
@@ -167,7 +231,7 @@ const Payment = () => {
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="h6">Total Amount</Typography>
                 <Typography variant="h5" color="primary">
-                  ₹2,500
+                  ₹{amount}
                 </Typography>
               </Box>
             </Stack>
@@ -317,7 +381,7 @@ const Payment = () => {
                   Payment Amount
                 </Typography>
                 <Typography variant="h5" color="primary">
-                  ₹2,500
+                  ₹{amount}
                 </Typography>
               </Box>
             </Stack>

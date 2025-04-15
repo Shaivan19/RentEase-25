@@ -1,34 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  IconButton,
-  Avatar,
-  Menu,
-  MenuItem,
-  Badge,
-  Tooltip,
-  Box,
-  useTheme,
-  useMediaQuery,
-  Divider,
-  ListItemIcon,
-  ListItemText,
-  InputBase,
-  Button,
-} from "@mui/material";
-import {
-  Notifications,
-  Menu as MenuIcon,
-  Logout,
-  Settings,
-  Person,
-  DarkMode,
-  LightMode,
-  Search,
-  AccountCircle,
-} from "@mui/icons-material";
+import {AppBar, Toolbar, Typography, IconButton, Avatar, Menu, MenuItem, Badge, Tooltip, Box, useTheme, useMediaQuery, Divider, ListItemIcon, ListItemText, InputBase, Button} from "@mui/material";
+import {Notifications, Menu as MenuIcon, Logout, Settings, Person, DarkMode, LightMode, Search, AccountCircle} from "@mui/icons-material";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { getCurrentUser } from "../../../utils/auth";
 
@@ -77,7 +49,7 @@ const LandlordNavbar = ({ toggleSidebar, isSidebarOpen }) => {
   const notifications = [
     { id: 1, title: "New Property Request", message: "John Doe requested to rent your apartment", time: "5 min ago" },
     { id: 2, title: "Payment Received", message: "Received ₹1,500 for March rent", time: "1 hour ago" },
-    { id: 3, title: "Maintenance Update", message: "Plumbing work completed at 123 Main St", time: "2 hours ago" },
+    { id: 3, title: "New Booking", message: "New booking request received", time: "2 hours ago" },
   ];
 
   return (

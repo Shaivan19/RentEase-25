@@ -221,8 +221,10 @@ const LandlordProperties = () => {
   };
 
   const handleEdit = () => {
-    window.location.href = `/landlord/edit-property/${selectedProperty._id}`;
-    handleMenuClose();
+    if (selectedProperty) {
+      navigate(`/landlord/edit-property/${selectedProperty._id}`);
+      handleMenuClose();
+    }
   };
 
   // Update the FAB click handler

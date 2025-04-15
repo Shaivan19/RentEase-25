@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -10,49 +10,60 @@ import { Container, TextField, Button, Box, Typography, Paper } from "@mui/mater
 const Login = () => {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
 
   const onSubmit = async (data) => {
     console.log("Submitting Login Data:", data);
     
     try {
-      const response = await axios.post("/users/login", data);
-      console.log("Response from Backend:", response.data);
-      
-      if (response.status === 200 && response.data?.data?.username) {
-        const userData = response.data?.data;
-        const userType = response.data?.userType?.toLowerCase();
+      const response = await fetch('http://localhost:1906/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
 
-        // Store user data directly in localStorage
-        localStorage.setItem("user", JSON.stringify({
-          userId: userData.userId,
-          username: userData.username,
-          userType: userType,
-          isLoggedIn: true,
-          token: response.data?.token
-        }));
+      const data = await response.json();
 
-        toast.success(`Welcome ${userData.username}!`, {
+      if (response.ok) {
+        // Store token and user info in localStorage
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userType', data.userType);
+        localStorage.setItem('userId', data.data.userId);
+
+        toast.success(`Welcome ${data.data.username}!`, {
           position: "top-right",
           autoClose: 3000,
           theme: "colored",
         });
 
         setTimeout(() => {
-          // Direct role-based navigation
-          if (userType === "tenant") {
-            navigate("/tenant/dashboard");
-          } else if (userType === "landlord") {
-            navigate("/landlord/dashboard");
-          } else if (userType === "admin") {
-            navigate("/admin/dashboard");
+          // Redirect based on user type
+          if (data.userType === 'Tenant') {
+            navigate('/tenant/dashboard');
+          } else if (data.userType === 'Landlord') {
+            navigate('/landlord/dashboard');
+          } else if (data.userType === 'Admin') {
+            navigate('/admin/dashboard');
           } else {
-            navigate("/home");
+            navigate('/home');
           }
         }, 2000);
+      } else {
+        console.error('Login error:', data.message);
+        toast.error(data.message, {
+          position: "top-right",
+          autoClose: 3000,
+          theme: "colored",
+        });
       }
     } catch (error) {
-      console.error("Login Error:", error);
-      toast.error(error.response?.data?.message || "Invalid credentials! Please try again.", {
+      console.error('Login error:', error);
+      toast.error('Error during login. Please try again.', {
         position: "top-right",
         autoClose: 3000,
         theme: "colored",

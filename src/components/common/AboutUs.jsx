@@ -140,8 +140,8 @@ const AboutUs = () => {
             <Grid item xs={12} sm={6} md={3}>
               <FeatureCard
                 icon={<SupportAgentIcon fontSize="large" />}
-                title="Maintenance Support"
-                description="Efficient tracking and communication for all maintenance needs."
+                title="24/7 Support"
+                description="Round-the-clock assistance for all your rental needs."
               />
             </Grid>
           </Grid>

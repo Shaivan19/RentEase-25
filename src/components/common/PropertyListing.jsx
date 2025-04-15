@@ -86,17 +86,20 @@ const PropertyListingPage = () => {
     priceRange: ''
   });
 
-  // Fetch properties from backend
   useEffect(() => {
+    // Direct API call to fetch properties
     const fetchProperties = async () => {
       try {
-        setLoading(true);
-        const response = await axios.get('/properties');
-        setProperties(response.data);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching properties:', err);
-        setError('Failed to load properties. Please try again later.');
+        const response = await fetch('http://localhost:1906/api/properties');
+        const data = await response.json();
+        
+        if (response.ok) {
+          setProperties(data.properties);
+        } else {
+          console.error('Error fetching properties:', data.message);
+        }
+      } catch (error) {
+        console.error('Error:', error);
       } finally {
         setLoading(false);
       }
